@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>宝宝巴士 | 记忆之旅</title>
+  <style>
+    :root { --ink:#f8f1e4; --muted:#b7b9b5; --night:#071015; --night2:#0c1a20; --gold:#f2c56b; --line:rgba(248,241,228,.24); }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; background:var(--night); }
+    body { margin:0; color:var(--ink); background:var(--night); font-family:"Microsoft YaHei","PingFang SC",sans-serif; overflow-x:hidden; }
+    button,input { font:inherit; }
+    .chapter { min-height:100svh; position:relative; overflow:hidden; }
+    .chapter[hidden] { display:none; }
+    .grain { position:fixed; z-index:20; pointer-events:none; inset:0; opacity:.055; background-image:repeating-linear-gradient(0deg,transparent 0 3px,#fff 4px 5px); mix-blend-mode:soft-light; }
+    .stars { position:absolute; inset:0; pointer-events:none; background-image:radial-gradient(circle at 9% 17%,#fff 0 1px,transparent 1.8px),radial-gradient(circle at 83% 14%,#f2c56b 0 1px,transparent 1.7px),radial-gradient(circle at 68% 82%,#fff 0 1px,transparent 1.7px),radial-gradient(circle at 22% 67%,#f2c56b 0 1px,transparent 1.9px); background-size:230px 230px,310px 310px,280px 280px,360px 360px; opacity:.65; animation:stars 8s linear infinite; }
+    @keyframes stars { to { background-position:230px -230px,-310px 310px,280px -280px,-360px 360px; } }
+    .eyebrow { margin:0 0 14px; font-size:11px; letter-spacing:.24em; color:var(--gold); }
+    .display { font-family:"Songti SC","STSong",serif; letter-spacing:.05em; font-weight:600; }
+    .copy { color:var(--muted); font-size:14px; line-height:1.85; }
+    .action { appearance:none; cursor:pointer; border:1px solid rgba(242,197,107,.7); color:#1d2a2c; background:var(--gold); border-radius:0; padding:13px 18px; font-size:13px; letter-spacing:.13em; transition:transform .2s, background .2s; }
+    .action:active { transform:scale(.97); }
+    .action:hover { background:#ffda89; }
+    .thin-action { color:var(--ink); background:transparent; border-color:var(--line); }
+    .rail { position:absolute; z-index:4; inset:0; border-left:1px solid rgba(242,197,107,.18); border-right:1px solid rgba(242,197,107,.18); width:min(100%,620px); margin:auto; pointer-events:none; }
+    .route { position:absolute; left:50%; top:0; bottom:0; width:1px; background:linear-gradient(transparent,rgba(242,197,107,.6),transparent); opacity:.45; }
+
+    /* boarding */
+    #board { min-height:100svh; display:grid; place-items:center; background:radial-gradient(ellipse at 50% 115%,#294851 0%,#0e1b22 36%,#071015 74%); }
+    .bus-lights { position:absolute; inset:auto 0 18vh; height:2px; background:linear-gradient(90deg,transparent 4%,#f2c56b 24%,transparent 25%,transparent 75%,#f2c56b 76%,transparent 96%); box-shadow:0 0 30px #f2c56b; opacity:.7; }
+    .ticket { position:relative; z-index:2; width:min(86vw,390px); padding:27px 26px 24px; color:#143038; background:#f3ead8; clip-path:polygon(0 0,100% 0,100% 14%,97% 17%,100% 20%,100% 80%,97% 83%,100% 86%,100% 100%,0 100%,0 86%,3% 83%,0 80%,0 20%,3% 17%,0 14%); box-shadow:0 28px 80px #0009; transform:rotate(-2deg); }
+    .ticket::after { content:""; position:absolute; top:14px; bottom:14px; right:38%; border-left:1px dashed #607071; }
+    .ticket h1 { margin:0; font-size:clamp(52px,16vw,78px); line-height:1; }
+    .ticket p { margin:11px 0; font-size:12px; letter-spacing:.13em; }
+    .ticket input { width:100%; border:0; border-bottom:1px solid #456169; padding:12px 0 9px; outline:none; background:transparent; color:#15343b; font:20px/1.2 monospace; letter-spacing:.45em; }
+    .ticket .action { margin-top:18px; width:100%; }
+    .error { min-height:18px; color:#b43c2e; font-size:12px; margin:9px 0 0; }
+    #door { position:fixed; z-index:30; inset:0; pointer-events:none; display:none; transform:translateZ(0); }
+    #door.visible { display:flex; }
+    #door i { width:50%; background:#050b0e; border-color:#f2c56b55; transition:transform .9s cubic-bezier(.75,0,.2,1); }
+    #door i:first-child { border-right:1px solid #f2c56b55; }
+    #door i:last-child { border-left:1px solid #f2c56b55; }
+    #door.open i:first-child { transform:translateX(-100%); }
+    #door.open i:last-child { transform:translateX(100%); }
+
+    /* intro: two photos, one clear action */
+    #opening { display:grid; place-items:center; background:linear-gradient(155deg,#101e25,#162732 55%,#0a1318); }
+    .opening-wrap { width:min(92vw,570px); height:100svh; display:grid; align-content:center; gap:20px; padding:26px 24px; }
+    .opening-head { position:relative; z-index:3; }
+    .opening-head h2 { margin:0; font-size:clamp(38px,10vw,66px); line-height:1.15; }
+    .memory-card { position:relative; height:min(50svh,430px); overflow:hidden; border:1px solid var(--line); background:var(--photo); box-shadow:0 22px 70px #0008; transform-origin:center; }
+    .memory-card::before { content:""; position:absolute; inset:0; background:linear-gradient(145deg,#fff3,transparent 30%),repeating-linear-gradient(135deg,transparent 0 42px,#fff1 43px 44px); }
+    .memory-card::after { content:""; position:absolute; inset:18px; border:1px solid #fff5; }
+    .photo-label { position:absolute; z-index:2; left:20px; bottom:18px; font-size:clamp(34px,9vw,58px); letter-spacing:.12em; font-weight:700; }
+    .photo-note { position:absolute; z-index:2; right:20px; top:20px; text-align:right; font-size:12px; line-height:1.7; color:#fff; }
+    .memory-card.zoom-in { animation:fromDetail .75s cubic-bezier(.2,.8,.2,1); }
+    @keyframes fromDetail { from { transform:scale(1.8); filter:blur(14px); opacity:.2; } to { transform:scale(1); filter:blur(0); opacity:1; } }
+    .direction { min-height:40px; color:#f5d685; font-size:12px; letter-spacing:.13em; text-align:center; transition:opacity .25s; }
+    .direction b { display:inline-grid; place-items:center; width:22px; height:22px; margin-right:8px; border:1px solid #f5d685; font-weight:400; }
+    .direction.pulse { animation:hintPulse 1.35s infinite; }
+    @keyframes hintPulse { 50% { transform:translateY(5px); opacity:.58; } }
+    .gate-trigger { display:none; }
+
+    /* full-window questions */
+    .gate { position:fixed; z-index:25; inset:0; display:none; place-items:center; padding:22px; background:rgba(3,10,13,.88); backdrop-filter:blur(11px); }
+    .gate.open { display:grid; animation:gateIn .45s both; }
+    @keyframes gateIn { from { opacity:0; clip-path:inset(45% 0); } to { opacity:1; clip-path:inset(0); } }
+    .gate-box { position:relative; width:min(100%,440px); border:1px solid rgba(242,197,107,.65); padding:30px 25px; text-align:center; background:#0b1a20; box-shadow:0 28px 90px #000; }
+    .gate-box h2 { margin:6px 0 10px; font-family:"Songti SC",serif; font-size:35px; }
+    .answers { display:grid; gap:9px; margin-top:20px; }
+    .answer { padding:13px; color:var(--ink); cursor:pointer; background:#122b32; border:1px solid #3a6064; text-align:left; transition:background .2s, transform .2s; }
+    .answer:hover { background:#1b3d45; transform:translateX(3px); }
+    .gate-feedback { min-height:26px; margin:15px 0 0; color:#f5d685; font-size:13px; }
+    .shards { display:flex; justify-content:center; gap:7px; margin:16px 0; }
+    .shard { display:grid; place-items:center; width:74px; height:42px; color:#15343a; background:#f3ead8; font-size:11px; animation:shard 1.8s ease-in-out infinite alternate; }
+    .shard:nth-child(2){animation-delay:.25s}.shard:nth-child(3){animation-delay:.5s}
+    @keyframes shard { to { transform:translateY(-5px) rotate(2deg); } }
+
+    /* sticky photo chapters */
+    .gallery { min-height:100svh; display:grid; place-items:center; isolation:isolate; background:radial-gradient(circle at 50% 55%,#1b3c44,transparent 42%),#081217; touch-action:pan-y; }
+    .gallery::after { content:""; position:absolute; z-index:-1; inset:0; background:linear-gradient(90deg,transparent calc(50% - 1px),rgba(242,197,107,.23) 50%,transparent calc(50% + 1px)); opacity:.35; }
+    .gallery-title { position:absolute; z-index:3; left:clamp(20px,8vw,90px); top:max(20px,env(safe-area-inset-top)); }
+    .gallery-title h2 { margin:3px 0 0; font:600 clamp(25px,7vw,48px)/1.15 "Songti SC",serif; }
+    .counter { position:absolute; z-index:4; right:clamp(20px,8vw,90px); top:max(25px,env(safe-area-inset-top)); color:var(--gold); font:12px monospace; letter-spacing:.18em; }
+    .stage { position:relative; width:min(100vw,720px); height:100svh; overflow:hidden; touch-action:none; }
+    .photo { --photo:#3d706e; position:absolute; inset:15svh max(12px,6vw) 19svh; overflow:hidden; background:var(--photo); box-shadow:0 22px 70px #0008; transform-origin:center; }
+    .photo::before { content:""; position:absolute; inset:0; opacity:.72; background:radial-gradient(circle at 22% 20%,#fff5,transparent 18%),linear-gradient(135deg,transparent 45%,#0003),repeating-linear-gradient(122deg,transparent 0 35px,#fff1 36px 38px); }
+    .photo::after { content:""; position:absolute; inset:17px; border:1px solid #fff5; }
+    .photo .number { position:absolute; z-index:2; left:22px; bottom:20px; font-size:clamp(52px,16vw,106px); line-height:1; font-weight:700; letter-spacing:.05em; color:#fff; }
+    .photo .replace { position:absolute; z-index:2; right:21px; bottom:21px; max-width:160px; text-align:right; color:#fff; font-size:12px; line-height:1.8; }
+    .photo.back { background:#f3ead8 !important; color:#17333a; animation:ticketFlip .62s both; }
+    .photo.back::before { opacity:1; background:repeating-linear-gradient(90deg,transparent 0 38px,#25495122 39px 40px),linear-gradient(#fff8,#e8d8ba); }
+    .photo.back::after { border-color:#32555a88; }
+    .photo.back .number { color:#27484c; font-size:18px; top:20px; bottom:auto; letter-spacing:.14em; }
+    .photo.back .replace { left:21px; right:21px; bottom:30px; max-width:none; color:#29464b; text-align:left; font:600 clamp(30px,8vw,52px)/1.25 "Songti SC",serif; }
+    .photo.back .photo-writing { display:none; }
+    .caption { position:absolute; z-index:4; left:clamp(20px,7vw,80px); right:clamp(20px,7vw,80px); bottom:8svh; display:flex; align-items:end; justify-content:space-between; gap:16px; pointer-events:none; }
+    .caption p { max-width:260px; margin:0; color:#e7e3db; font-size:13px; line-height:1.75; text-shadow:0 2px 10px #000; }
+    .gesture { flex:0 0 auto; pointer-events:auto; cursor:pointer; }
+    .gesture.hidden { opacity:0; }
+    .gesture b { font-size:20px; vertical-align:-1px; margin-right:4px; }
+    .photo.cover { animation:cover .65s cubic-bezier(.17,.76,.29,1) both; }
+    .photo.zoom { animation:photoZoom .72s cubic-bezier(.2,.8,.2,1) both; }
+    .photo.turn { animation:turn .7s cubic-bezier(.18,.8,.2,1) both; }
+    .photo.float { animation:float .72s cubic-bezier(.17,.9,.2,1) both; }
+    .photo.fade { animation:softFade .7s ease both; }
+    .photo.stack { animation:stack .7s cubic-bezier(.22,.8,.25,1) both; }
+    @keyframes cover { from { transform:translateY(105%) scale(.84); } to { transform:none; } }
+    @keyframes photoZoom { from { transform:scale(1.36); filter:blur(14px); opacity:0; } to { transform:none; filter:none; opacity:1; } }
+    @keyframes turn { from { transform:rotate(13deg) translateX(100%); opacity:0; } to { transform:none; opacity:1; } }
+    @keyframes float { from { transform:translateX(-110%) rotate(-9deg); opacity:0; } to { transform:none; opacity:1; } }
+    @keyframes softFade { from { opacity:0; } to { opacity:1; } }
+    @keyframes stack { from { transform:scale(.7) translateY(45%) rotate(-6deg); opacity:0; } to { transform:none; opacity:1; } }
+    .fog { position:absolute; z-index:3; inset:0; background:linear-gradient(105deg,#d9e4dbdd,#9db8bccc); transition:opacity .7s; }
+    .fog.clear { opacity:0; pointer-events:none; }
+    .tap-mark { position:absolute; z-index:5; right:8vw; top:18svh; width:44px; height:44px; border:1px solid #f2c56b; border-radius:50%; display:none; place-items:center; color:#f2c56b; animation:halo 1.2s infinite; }
+    .tap-mark.show { display:grid; }
+    @keyframes halo { 50% { box-shadow:0 0 0 11px transparent,0 0 0 1px #f2c56b; } }
+    .ticket-slip { position:absolute; z-index:4; right:8vw; top:20svh; display:none; width:120px; padding:11px; color:#19343a; background:#f3ead8; transform:rotate(8deg); font-size:11px; line-height:1.6; }
+    .ticket-slip.show { display:block; animation:ticketFlip .5s both; }
+    @keyframes ticketFlip { from { transform:rotateY(90deg) rotate(8deg); } to { transform:rotateY(0) rotate(8deg); } }
+    .arrival-lamp { position:absolute; z-index:7; top:16svh; right:10vw; display:none; width:26px; height:26px; border-radius:50%; background:#536466; cursor:pointer; }
+    .arrival-lamp.show { display:block; }
+    .arrival-lamp.lit { background:var(--gold); box-shadow:0 0 10px var(--gold),0 0 45px var(--gold); }
+
+    /* the separated 8-16 chapter */
+    #distance { background:radial-gradient(circle at 50% 40%,#2b293d,transparent 38%),#0b1018; }
+    .dual .photo { inset:17svh auto 20svh; width:min(72vw,470px); }
+    .dual .photo.main { left:50%; transform:translateX(-50%); }
+    .dual .photo.side { left:4vw; width:25vw; height:16svh; top:18svh; bottom:auto; opacity:.72; filter:saturate(.75); }
+    .dual .photo.side .number { font-size:20px; left:10px; bottom:9px; }
+    .dual .photo.side .replace { display:none; }
+    .dual.split .photo.main { width:43vw; }
+    .dual.split .photo.main.left { left:4vw; transform:none; }
+    .dual.split .photo.main.right { right:4vw; left:auto; transform:none; }
+    .dual.split .photo.main .number { font-size:clamp(36px,9vw,65px); }
+    .dual.ticket-mode .photo.main { clip-path:polygon(0 0,100% 0,100% 15%,97% 20%,100% 25%,100% 75%,97% 80%,100% 85%,100% 100%,0 100%,0 85%,3% 80%,0 75%,0 25%,3% 20%,0 15%); }
+    .bridge { position:absolute; z-index:5; top:50%; left:50%; width:0; height:1px; background:var(--gold); box-shadow:0 0 24px var(--gold); transition:width .9s,left .9s; }
+    .bridge.join { left:0; width:100%; }
+
+    /* final */
+    #ending { display:grid; place-items:center; min-height:100svh; padding:35px 20px; text-align:center; background:radial-gradient(circle at 50% 43%,#27353d,transparent 37%),#0b1115; }
+    .future-ticket { width:min(88vw,430px); color:#183239; background:#f3ead8; padding:28px 26px; text-align:left; box-shadow:0 22px 70px #0008; animation:arrive 1s cubic-bezier(.18,.88,.2,1) both; }
+    @keyframes arrive { from { transform:translateY(60px) scale(.85); opacity:0; } to { transform:none; opacity:1; } }
+    .future-ticket h2 { color:#193139; margin:3px 0 18px; font:600 clamp(37px,10vw,55px)/1.15 "Songti SC",serif; }
+    .future-ticket p { margin:0; padding:12px 0; border-top:1px dashed #7d8a86; color:#31484b; font-size:13px; }
+    .future-ticket b { color:#1f3435; }
+    .restart { margin-top:22px; color:var(--muted); background:none; border:0; cursor:pointer; font-size:12px; }
+    @media (max-width:520px) {
+      .ticket { width:calc(100vw - 34px); padding:24px 22px 21px; }
+      .ticket h1 { font-size:58px; }
+      .opening-wrap { padding:22px 17px; gap:15px; }
+      .opening-head h2 { font-size:38px; }
+      .memory-card { height:45svh; }
+      .gallery-title { left:18px; top:20px; }
+      .gallery-title h2 { font-size:31px; }
+      .counter { right:18px; top:26px; }
+      .photo { inset:14svh 13px 20svh; }
+      .photo .number { left:17px; bottom:17px; font-size:55px; }
+      .photo .replace { right:17px; bottom:17px; max-width:126px; font-size:11px; }
+      .caption { left:18px; right:18px; bottom:4svh; align-items:end; }
+      .caption p { max-width:210px; font-size:12px; }
+      .direction { font-size:11px; white-space:nowrap; }
+      .gesture.pulse { animation:none; }
+      .dual .photo { width:78vw; }
+      .dual .photo.side { width:22vw; height:13svh; }
+      .gate-box { padding:27px 19px; }
+      .answer { min-height:48px; }
+    }
+    @media (min-width:760px) { .photo { inset-left:12vw; inset-right:12vw; } .opening-wrap { grid-template-columns:1fr 1.1fr; align-items:center; } .opening-head { order:2; } .memory-card { height:62svh; } }
+  </style>
+</head>
+<body>
+  <div class="grain"></div>
+  <div id="door" aria-hidden="true"><i></i><i></i></div>
+
+  <main>
+    <section id="board" class="chapter">
+      <div class="stars"></div><div class="bus-lights"></div>
+      <form id="boarding" class="ticket">
+        <p>MEMORY BUS / 489978</p>
+        <h1 class="display">宝宝巴士</h1>
+        <p>请输入车票密码，今晚的车门只为这一段记忆打开。</p>
+        <input id="code" aria-label="车票密码" inputmode="numeric" maxlength="6" placeholder="489978">
+        <button class="action" type="submit">验票上车</button>
+        <p id="codeError" class="error"></p>
+      </form>
+    </section>
+
+    <section id="opening" class="chapter" hidden>
+      <div class="stars"></div><div class="rail"></div>
+      <div class="opening-wrap">
+        <div class="opening-head">
+          <p class="eyebrow">STORY BEGINS</p>
+          <h2 class="display">车门打开以后，<br>先是那一天。</h2>
+          <p class="copy" id="openCopy">这里可以写下第一次见面时，最想留下的一句话。</p>
+        </div>
+        <div id="openingCard" class="memory-card zoom-in" style="--photo:linear-gradient(135deg,#b25c5d,#5b2941)">
+          <span class="photo-label">开场 A</span>
+          <span class="photo-note">照片放置处<br>第一次见面的画面</span>
+        </div>
+        <p id="openingHint" class="direction pulse"><b>←</b>轻划，翻到故事的另一面</p>
+      </div>
+    </section>
+
+    <section id="travel" class="chapter gallery" hidden>
+      <div class="stars"></div>
+      <div class="gallery-title"><p class="eyebrow">THE SAME SIDE OF THE WORLD</p><h2>天地一方</h2></div>
+      <div id="travelCounter" class="counter">01 / 07</div>
+      <div id="travelStage" class="stage">
+        <div id="travelPhoto" class="photo"><span class="number">图片 01</span><span class="replace">把这一站的照片和一句话<br>放进这里</span></div>
+        <div id="fog" class="fog"></div>
+        <div id="tapMark" class="tap-mark">点</div>
+        <div id="ticketSlip" class="ticket-slip">票根背面<br>[ 写下当时的一句话 ]</div>
+        <div id="arrivalLamp" class="arrival-lamp" aria-label="点亮到站灯"></div>
+      </div>
+      <div class="caption"><p id="travelCaption">雾还没有散开。先轻划，把这一站的画面从雾里带出来。</p><div id="travelHint" class="direction gesture"><b>←</b>轻划翻开</div></div>
+    </section>
+
+    <section id="distance" class="chapter gallery" hidden>
+      <div class="stars"></div>
+      <div class="gallery-title"><p class="eyebrow">TWO PLACES, ONE DIRECTION</p><h2>天各一方</h2></div>
+      <div id="distanceCounter" class="counter">08 / 16</div>
+      <div id="distanceStage" class="stage dual">
+        <div id="distanceMain" class="photo main"><span class="number">图片 08</span><span class="replace">这一站的照片<br>和一句想说的话</span></div>
+        <div id="distanceSide" class="photo side" hidden><span class="number">图片 08</span></div>
+        <div id="bridge" class="bridge"></div>
+      </div>
+      <div class="caption"><p id="distanceCaption">下一段故事，在另一座城市慢慢展开。</p><div id="distanceHint" class="direction gesture"><b>←</b>轻划进入下一段</div></div>
+    </section>
+
+    <section id="ending" class="chapter" hidden>
+      <div class="stars"></div>
+      <div>
+        <p class="eyebrow">NEXT STOP</p>
+        <div class="future-ticket">
+          <p>有效期：一直</p>
+          <h2 id="futureHeading">下一站：幸福</h2>
+          <p id="futureMessage">[ 写给未来的一句话 ]</p>
+          <p><b>目的地</b>　[ 想一起去的地方 ]</p>
+          <p><b>下一件事</b>　[ 一个小约定 ]</p>
+          <p><b>再次打开</b>　[ 一个值得纪念的日期 ]</p>
+        </div>
+        <button id="restart" class="restart">回到发车前</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="gateOne" class="gate" role="dialog" aria-modal="true">
+    <div class="gate-box">
+      <p class="eyebrow">FIRST CHECK</p><h2>第一站验证</h2>
+      <p class="copy">那天以后，这段旅程真正开始的原因是什么？</p>
+      <div class="answers"><button class="answer" data-gate="one" data-answer="wrong">A. 因为刚好顺路</button><button class="answer" data-gate="one" data-answer="right">B. 因为想和你一直走下去</button></div>
+      <p id="gateOneFeedback" class="gate-feedback"></p>
+    </div>
+  </div>
+  <div id="gateTwo" class="gate" role="dialog" aria-modal="true">
+    <div class="gate-box">
+      <p class="eyebrow">SECOND CHECK</p><h2>第二站验证</h2>
+      <div class="shards"><span class="shard">01</span><span class="shard">04</span><span class="shard">07</span></div>
+      <p class="copy">这些碎片拼成的，不是一张旧车票，而是继续向前的理由。</p>
+      <div class="answers"><button class="answer" data-gate="two" data-answer="wrong">A. 到这里就够了</button><button class="answer" data-gate="two" data-answer="right">B. 下一段也要一起走</button></div>
+      <p id="gateTwoFeedback" class="gate-feedback"></p>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const $ = (id) => document.getElementById(id);
+      const memory = (() => {
+        try {
+          if (window.MEMORY_DATA) return window.MEMORY_DATA;
+          if (new URLSearchParams(location.search).has('preview')) return JSON.parse(localStorage.getItem('baby-bus-memory-data') || '{}');
+          return {};
+        }
+        catch { return {}; }
+      })();
+      const palette = {
+        A:'linear-gradient(135deg,#b25c5d,#5b2941)', B:'linear-gradient(135deg,#e89b63,#a44945)',
+        1:'linear-gradient(135deg,#547d87,#162c3b)', 2:'linear-gradient(135deg,#d77d5c,#70403f)',
+        3:'linear-gradient(135deg,#86714b,#354334)', 4:'linear-gradient(135deg,#a4617d,#3e2846)',
+        5:'linear-gradient(135deg,#5d938c,#23414c)', 6:'linear-gradient(135deg,#bc9a50,#5b4630)',
+        7:'linear-gradient(135deg,#5c709d,#25294d)', 8:'linear-gradient(135deg,#7e748d,#302b45)',
+        9:'linear-gradient(135deg,#bd745f,#5a3345)', 10:'linear-gradient(135deg,#517c75,#253f43)',
+        11:'linear-gradient(135deg,#ae8d52,#504023)', 12:'linear-gradient(135deg,#6a789c,#303a58)',
+        13:'linear-gradient(135deg,#b66673,#522e3c)', 14:'linear-gradient(135deg,#455a75,#1c2639)',
+        15:'linear-gradient(135deg,#c99761,#60452f)', 16:'linear-gradient(135deg,#607d75,#2d4742)'
+      };
+      const travel = [
+        ['cover','雾还没有散开。先轻划，把这一站的画面从雾里带出来。','←','轻划翻开'],
+        ['zoom','有些瞬间靠近看，才发现它比记忆里还亮。','←','轻划靠近'],
+        ['turn','翻过这一张，是一段可以写进照片旁边的小事。','←','轻划翻面'],
+        ['float','这一站需要点按照片，翻开背面的票根。','点','点按照片'],
+        ['stack','同一段日子，被悄悄收进了不同的画面里。','←','轻划收好'],
+        ['fade','把这一页留给一句不必解释的话。','←','轻划继续'],
+        ['cover','最后一张到站了。点亮右上角的灯，下一扇门才会打开。','点','点亮到站灯']
+      ];
+      const distance = [
+        ['main','','下一段故事，在另一座城市慢慢展开。','←','轻划进入下一段'],
+        ['main','8','同一段回忆被留在边上，新的画面来到正中。','←','轻划继续'],
+        ['main','9','不需要把过去藏起来，只要继续往前。','←','轻划继续'],
+        ['main','10','隔着屏幕，也能把今天讲给对方听。','←','轻划继续'],
+        ['main','11','每一张照片都可以放一段自己的文字。','←','轻划继续'],
+        ['main','12','距离没有让故事停在这里。','←','轻划继续'],
+        ['split','','两个方向，同时亮起。','←','轻划抵达'],
+        ['ticket','','这一页是一张准备出发的车票。','←','轻划汇合'],
+        ['merge','','这一段已经走完。向下，让两边的画面汇合。','↓','向下汇合']
+      ];
+      const state = { opening:0, t:1, d:8, x:0, y:0, lastX:0, lastY:0, cool:false, travelBack:false, lockedId:null };
+      const lockTo = (id) => {
+        state.lockedId = id;
+        const section = $(id);
+        window.scrollTo(0, section.offsetTop);
+      };
+      const show = (id) => { $(id).hidden = false; requestAnimationFrame(() => lockTo(id)); };
+      const setDirection = (target, symbol, words) => { target.innerHTML = `<b>${symbol}</b>${words}`; target.classList.add('pulse'); };
+      const enter = () => {
+        const door = $('door');
+        door.classList.add('visible');
+        requestAnimationFrame(() => requestAnimationFrame(() => door.classList.add('open')));
+        setTimeout(() => { door.classList.remove('visible'); show('opening'); }, 900);
+      };
+      $('boarding').addEventListener('submit', (event) => {
+        event.preventDefault();
+        if ($('code').value.trim() !== '489978') { $('codeError').textContent = '车票密码不对，再想一想。'; return; }
+        $('codeError').textContent = '';
+        enter();
+      });
+
+      const memoryText = (number, fallback) => memory.text?.[String(number)]?.trim() || fallback;
+      const memoryImage = (number) => memory.images?.[String(number)] || '';
+      const personalizeStaticCopy = () => {
+        $('openCopy').textContent = memoryText('openingWords', '这里可以写下第一次见面时，最想留下的一句话。');
+        $('futureHeading').textContent = memoryText('endingTitle', '下一站：幸福');
+        $('futureMessage').textContent = memoryText('endingWords', '[ 写给未来的一句话 ]');
+      };
+      function applyPhotoBackground(photo, number) {
+        const image = memoryImage(number);
+        photo.style.setProperty('--photo', image ? `linear-gradient(145deg,rgba(0,0,0,.08),rgba(0,0,0,.38)),url("${image}") center/cover` : palette[number]);
+      }
+      function paint(photo, number, effect, text, side=false) {
+        photo.className = `photo ${side ? 'side' : 'main'} ${effect || ''}`;
+        applyPhotoBackground(photo, number);
+        photo.innerHTML = `<span class="number">图片 ${String(number).padStart(2,'0')}</span>${side ? '' : `<span class="replace">${memoryText(number, text)}</span>`}`;
+      }
+      function renderOpening() {
+        const isB = state.opening === 1;
+        const card = $('openingCard');
+        card.classList.remove('zoom-in'); void card.offsetWidth; card.classList.add('zoom-in');
+        applyPhotoBackground(card, isB ? 'B' : 'A');
+        card.innerHTML = `<span class="photo-label">开场 ${isB ? 'B' : 'A'}</span><span class="photo-note">照片放置处<br>${isB ? '那天之后的另一个片段' : '第一次见面的画面'}</span>`;
+        $('openCopy').textContent = isB ? '第二张照片后，向下进入这一段记忆的第一道门。' : memoryText('openingWords', '这里可以写下第一次见面时，最想留下的一句话。');
+        setDirection($('openingHint'), isB ? '↓' : '←', isB ? '向下进入第一站验证 · 点按也可进入' : '轻划翻面 · 点按也可继续');
+      }
+      function openGate(id) { $(id).classList.add('open'); }
+      function renderTravel() {
+        const item = travel[state.t - 1];
+        state.travelBack=false;
+        paint($('travelPhoto'), state.t, item[0], '这里放入照片和这一站的文字');
+        $('travelCounter').textContent = `${String(state.t).padStart(2,'0')} / 07`;
+        $('travelCaption').textContent = item[1];
+        setDirection($('travelHint'), item[2], state.t === 7 ? item[3] : `${item[3]} · 点按也可继续`);
+        $('fog').classList.toggle('clear', state.t !== 1);
+        $('tapMark').classList.toggle('show', state.t === 4);
+        $('ticketSlip').classList.remove('show');
+        $('arrivalLamp').classList.toggle('show', state.t === 7);
+      }
+      function renderDistance() {
+        const frame = distance[state.d - 8];
+        const stage = $('distanceStage');
+        stage.className = `stage dual ${frame[0] === 'split' ? 'split' : ''} ${frame[0] === 'ticket' ? 'ticket-mode' : ''}`;
+        paint($('distanceMain'), state.d, ['cover','float','zoom','turn','stack','fade','cover','turn','zoom'][state.d - 8], '这里放照片和一段文字');
+        if (frame[1]) { $('distanceSide').hidden=false; paint($('distanceSide'), frame[1], '', '', true); } else { $('distanceSide').hidden=true; }
+        if (frame[0] === 'split') {
+          paint($('distanceMain'), 14, 'cover', '左边和右边，各自有一张照片');
+          $('distanceMain').classList.add('left');
+          $('distanceSide').hidden=false; paint($('distanceSide'), 14, 'float', '', true); $('distanceSide').classList.remove('side'); $('distanceSide').classList.add('main','right');
+        }
+        if (frame[0] === 'merge') { $('distanceMain').style.transform='translateX(-50%) scale(.9)'; }
+        else { $('distanceMain').style.transform=''; }
+        $('distanceCounter').textContent = `${String(state.d).padStart(2,'0')} / 16`;
+        $('distanceCaption').textContent = frame[2];
+        setDirection($('distanceHint'), frame[3], state.d === 16 ? frame[4] : `${frame[4]} · 点按也可继续`);
+      }
+      function moveInChapter(chapter, endX, endY) {
+        if (state.cool) return;
+        const dx = endX - state.x, dy = endY - state.y;
+        if (Math.max(Math.abs(dx), Math.abs(dy)) < 38) return;
+        state.cool=true; setTimeout(() => state.cool=false, 360);
+        if (chapter === 'travel' && Math.abs(dx) > Math.abs(dy)) {
+          if (dx < 0 && state.t < 7) { state.t++; renderTravel(); }
+          if (dx > 0 && state.t > 1) { state.t--; renderTravel(); }
+          return;
+        }
+        if (chapter === 'distance' && Math.abs(dx) > Math.abs(dy)) {
+          if (dx < 0 && state.d < 16) { state.d++; renderDistance(); }
+          if (dx > 0 && state.d > 8) { state.d--; renderDistance(); }
+          return;
+        }
+        if (chapter === 'opening' && state.opening === 1 && dy < -38) openGate('gateOne');
+        if (chapter === 'distance' && state.d === 16 && dy < -38) { $('bridge').classList.add('join'); setTimeout(() => show('ending'), 850); }
+      }
+      function bindGestures(element, chapter) {
+        element.addEventListener('pointerdown', (event) => { state.x=event.clientX; state.y=event.clientY; state.lastX=event.clientX; state.lastY=event.clientY; });
+        element.addEventListener('pointermove', (event) => { state.lastX=event.clientX; state.lastY=event.clientY; });
+        element.addEventListener('pointerup', (event) => moveInChapter(chapter, event.clientX || state.lastX, event.clientY || state.lastY));
+        element.addEventListener('touchstart', (event) => {
+          const touch = event.changedTouches[0];
+          state.x = touch.clientX;
+          state.y = touch.clientY;
+          state.lastX = touch.clientX;
+          state.lastY = touch.clientY;
+        }, { passive:true });
+        element.addEventListener('touchmove', (event) => {
+          const touch = event.changedTouches[0];
+          state.lastX = touch.clientX;
+          state.lastY = touch.clientY;
+        }, { passive:true });
+        element.addEventListener('touchend', (event) => {
+          const touch = event.changedTouches[0];
+          moveInChapter(chapter, touch ? touch.clientX : state.lastX, touch ? touch.clientY : state.lastY);
+        }, { passive:false });
+      }
+      bindGestures($('opening'), 'opening');
+      bindGestures($('travelStage'), 'travel');
+      bindGestures($('distanceStage'), 'distance');
+      window.addEventListener('scroll', () => {
+        if (!state.lockedId) return;
+        const locked = $(state.lockedId);
+        if (!locked || locked.hidden) return;
+        if (Math.abs(window.scrollY - locked.offsetTop) > 2) window.scrollTo(0, locked.offsetTop);
+      }, { passive:true });
+      $('openingCard').addEventListener('click', () => { if (state.opening === 0) { state.opening=1; renderOpening(); } });
+      $('openingHint').addEventListener('click', () => {
+        if (state.opening === 0) { state.opening=1; renderOpening(); }
+        else openGate('gateOne');
+      });
+      $('opening').addEventListener('wheel', (e) => { e.preventDefault(); if (state.opening === 1 && e.deltaY > 24) openGate('gateOne'); }, {passive:false});
+      $('travel').addEventListener('wheel', (e) => e.preventDefault(), {passive:false});
+      $('distance').addEventListener('wheel', (e) => e.preventDefault(), {passive:false});
+      $('fog').addEventListener('click', () => { $('fog').classList.add('clear'); $('travelCaption').textContent='雾散开了。现在可以向左翻到下一张。'; });
+      $('travelPhoto').addEventListener('click', (event) => {
+        if (event.target.closest('[contenteditable]') || state.t !== 4) return;
+        const photo = $('travelPhoto');
+        state.travelBack = !state.travelBack;
+        photo.classList.toggle('back', state.travelBack);
+        $('tapMark').classList.toggle('show', !state.travelBack);
+        if (state.travelBack) {
+          photo.innerHTML = `<span class="number">票根背面 / 图片 04</span><span class="replace">${memoryText(4, '这里写下那天最想留下的一句话')}</span>`;
+          $('travelCaption').textContent='照片翻到背面了。这里就是可以填写文字的位置，再点一次翻回照片。';
+          setDirection($('travelHint'), '点', '点按翻回照片');
+        } else {
+          renderTravel();
+        }
+      });
+      $('arrivalLamp').addEventListener('click', () => { if (state.t === 7) { $('arrivalLamp').classList.add('lit'); $('travelHint').classList.remove('pulse'); setTimeout(() => openGate('gateTwo'), 560); } });
+      $('travelHint').addEventListener('click', () => {
+        if (state.t < 7) { state.t++; renderTravel(); }
+      });
+      $('distanceHint').addEventListener('click', () => {
+        if (state.d < 16) { state.d++; renderDistance(); return; }
+        $('bridge').classList.add('join');
+        setTimeout(() => show('ending'), 850);
+      });
+      document.querySelectorAll('.answer').forEach((button) => button.addEventListener('click', () => {
+        const right = button.dataset.answer === 'right';
+        const one = button.dataset.gate === 'one';
+        const feedback = $(one ? 'gateOneFeedback' : 'gateTwoFeedback');
+        if (!right) { feedback.textContent='还差一点。再看看这段旅程真正想留下的答案。'; return; }
+        feedback.textContent='答对了。这扇门为你打开。';
+        setTimeout(() => {
+          $(one ? 'gateOne' : 'gateTwo').classList.remove('open');
+          if (one) { show('travel'); renderTravel(); } else { show('distance'); renderDistance(); }
+        }, 620);
+      }));
+      $('restart').addEventListener('click', () => location.reload());
+      personalizeStaticCopy();
+      renderOpening();
+    })();
+  </script>
+</body>
+</html>
