@@ -143,6 +143,8 @@
     .dual.split .photo.main.right { right:4vw; left:auto; transform:none; }
     .dual.split .photo.main .number { font-size:clamp(36px,9vw,65px); }
     .dual.ticket-mode .photo.main { clip-path:polygon(0 0,100% 0,100% 15%,97% 20%,100% 25%,100% 75%,97% 80%,100% 85%,100% 100%,0 100%,0 85%,3% 80%,0 75%,0 25%,3% 20%,0 15%); }
+    .dual.distance-single::before { content:""; position:absolute; z-index:2; left:50%; top:17svh; bottom:20svh; width:1px; background:linear-gradient(transparent,var(--gold),transparent); box-shadow:0 0 18px var(--gold); }
+    .dual.distance-single .photo.main { width:min(66vw,430px); }
     .bridge { position:absolute; z-index:5; top:50%; left:50%; width:0; height:1px; background:var(--gold); box-shadow:0 0 24px var(--gold); transition:width .9s,left .9s; }
     .bridge.join { left:0; width:100%; }
 
@@ -312,7 +314,7 @@
         ['main','10','图片 11 · 画面被切成几条，再重新拼回完整。','←','拼合画面'],
         ['main','11','图片 12 · 不必藏起过去，只要继续往前。','←','继续向前'],
         ['main','12','图片 13 · 城市从暗处一盏一盏亮起来。','←','点亮夜色'],
-        ['split','','图片 14 · 两个方向第一次同时出现，中间只留一段距离。','←','靠近一点'],
+        ['distance','','图片 14 · 只有这一张照片，中间留下一道距离的光。','←','靠近一点'],
         ['ticket','','图片 15 · 两边的画面折成同一张准备出发的车票。','←','翻到车票'],
         ['merge','','图片 16 · 这一段已经走完。向下，让两边汇合。','↓','向下汇合']
       ];
@@ -381,14 +383,9 @@
       function renderDistance() {
         const frame = distance[state.d - 8];
         const stage = $('distanceStage');
-        stage.className = `stage dual ${frame[0] === 'split' ? 'split' : ''} ${frame[0] === 'ticket' ? 'ticket-mode' : ''}`;
+        stage.className = `stage dual ${frame[0] === 'split' ? 'split' : ''} ${frame[0] === 'distance' ? 'distance-single' : ''} ${frame[0] === 'ticket' ? 'ticket-mode' : ''}`;
         paint($('distanceMain'), state.d, ['cover','float','zoom','turn','stack','fade','cover','turn','zoom'][state.d - 8], '这里放照片和一段文字');
         if (frame[1]) { $('distanceSide').hidden=false; paint($('distanceSide'), frame[1], '', '', true); } else { $('distanceSide').hidden=true; }
-        if (frame[0] === 'split') {
-          paint($('distanceMain'), 14, 'cover', '左边和右边，各自有一张照片');
-          $('distanceMain').classList.add('left');
-          $('distanceSide').hidden=false; paint($('distanceSide'), 14, 'float', '', true); $('distanceSide').classList.remove('side'); $('distanceSide').classList.add('main','right');
-        }
         if (frame[0] === 'merge') { $('distanceMain').style.transform='translateX(-50%) scale(.9)'; }
         else { $('distanceMain').style.transform=''; }
         $('distanceCounter').textContent = `${String(state.d).padStart(2,'0')} / 16`;
