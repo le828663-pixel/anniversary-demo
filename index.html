@@ -122,6 +122,14 @@
     .arrival-lamp { position:absolute; z-index:7; top:16svh; right:10vw; display:none; width:26px; height:26px; border-radius:50%; background:#536466; cursor:pointer; }
     .arrival-lamp.show { display:block; }
     .arrival-lamp.lit { background:var(--gold); box-shadow:0 0 10px var(--gold),0 0 45px var(--gold); }
+    .stamp-strip { position:absolute; z-index:7; right:clamp(18px,7vw,80px); top:62px; display:flex; gap:5px; }
+    .stamp { display:grid; place-items:center; width:19px; height:19px; border:1px solid rgba(248,241,228,.32); border-radius:50%; color:transparent; font:9px monospace; transition:background .3s, transform .3s; }
+    .stamp.done { color:#173038; border-color:var(--gold); background:var(--gold); transform:rotate(-10deg); }
+    .stage-flash { position:absolute; z-index:6; inset:0; pointer-events:none; opacity:0; background:radial-gradient(circle at 50% 50%,#fff9,transparent 23%); mix-blend-mode:screen; }
+    .stage-flash.fire { animation:stageFlash .55s ease-out both; }
+    @keyframes stageFlash { 0%{opacity:0} 35%{opacity:.9} 100%{opacity:0} }
+    .photo.archive::before { background:linear-gradient(90deg,#0004 1px,transparent 1px) 0 0/25px 100%,linear-gradient(#0004 1px,transparent 1px) 0 0/100% 25px,radial-gradient(circle at 22% 20%,#fff5,transparent 18%); }
+    .photo.ticket-entry { clip-path:polygon(0 0,100% 0,100% 14%,97% 19%,100% 24%,100% 76%,97% 81%,100% 86%,100% 100%,0 100%,0 86%,3% 81%,0 76%,0 24%,3% 19%,0 14%); }
 
     /* the separated 8-16 chapter */
     #distance { background:radial-gradient(circle at 50% 40%,#2b293d,transparent 38%),#0b1018; }
@@ -209,6 +217,8 @@
       <div id="travelCounter" class="counter">01 / 07</div>
       <div id="travelStage" class="stage">
         <div id="travelPhoto" class="photo"><span class="number">图片 01</span><span class="replace">把这一站的照片和一句话<br>放进这里</span></div>
+        <div id="travelFlash" class="stage-flash"></div>
+        <div id="stampStrip" class="stamp-strip" aria-label="已到站记录"></div>
         <div id="fog" class="fog"></div>
         <div id="tapMark" class="tap-mark">点</div>
         <div id="ticketSlip" class="ticket-slip">票根背面<br>[ 写下当时的一句话 ]</div>
@@ -287,24 +297,24 @@
         15:'linear-gradient(135deg,#c99761,#60452f)', 16:'linear-gradient(135deg,#607d75,#2d4742)'
       };
       const travel = [
-        ['cover','雾还没有散开。先轻划，把这一站的画面从雾里带出来。','←','轻划翻开'],
-        ['zoom','有些瞬间靠近看，才发现它比记忆里还亮。','←','轻划靠近'],
-        ['turn','翻过这一张，是一段可以写进照片旁边的小事。','←','轻划翻面'],
-        ['float','这一站需要点按照片，翻开背面的票根。','点','点按照片'],
-        ['stack','同一段日子，被悄悄收进了不同的画面里。','←','轻划收好'],
-        ['fade','把这一页留给一句不必解释的话。','←','轻划继续'],
-        ['cover','最后一张到站了。点亮右上角的灯，下一扇门才会打开。','点','点亮到站灯']
+        ['cover','图片 01 · 雾被拨开的那一刻。轻划让第一站从雾里出现。','←','拨开雾层'],
+        ['zoom','图片 02 · 先看见一个细节，再看见完整的那天。','←','拉近画面'],
+        ['turn','图片 03 · 这张照片像从旧相册里抽出来一样落下。','←','翻开相册'],
+        ['float','图片 04 · 点按照片，翻到票根背面，留下这一站的话。','点','翻看票根'],
+        ['stack','图片 05 · 前一站缩成小小一叠，新的画面从中抽出。','←','抽出下一张'],
+        ['archive','图片 06 · 色彩会在停留后慢慢回来。','←','让颜色回来'],
+        ['ticket-entry','图片 07 · 最后一站。点亮到站灯，拿到下一张车票。','点','点亮到站灯']
       ];
       const distance = [
-        ['main','','下一段故事，在另一座城市慢慢展开。','←','轻划进入下一段'],
-        ['main','8','同一段回忆被留在边上，新的画面来到正中。','←','轻划继续'],
-        ['main','9','不需要把过去藏起来，只要继续往前。','←','轻划继续'],
-        ['main','10','隔着屏幕，也能把今天讲给对方听。','←','轻划继续'],
-        ['main','11','每一张照片都可以放一段自己的文字。','←','轻划继续'],
-        ['main','12','距离没有让故事停在这里。','←','轻划继续'],
-        ['split','','两个方向，同时亮起。','←','轻划抵达'],
-        ['ticket','','这一页是一张准备出发的车票。','←','轻划汇合'],
-        ['merge','','这一段已经走完。向下，让两边的画面汇合。','↓','向下汇合']
+        ['main','','图片 08 · 另一座城市的第一束车窗光。','←','从左侧进入'],
+        ['main','8','图片 09 · 08 留在角落，09 来到正中。','←','从右侧覆盖'],
+        ['main','9','图片 10 · 新画面从中间展开，像一封刚拆开的信。','←','展开信件'],
+        ['main','10','图片 11 · 画面被切成几条，再重新拼回完整。','←','拼合画面'],
+        ['main','11','图片 12 · 不必藏起过去，只要继续往前。','←','继续向前'],
+        ['main','12','图片 13 · 城市从暗处一盏一盏亮起来。','←','点亮夜色'],
+        ['split','','图片 14 · 两个方向第一次同时出现，中间只留一段距离。','←','靠近一点'],
+        ['ticket','','图片 15 · 两边的画面折成同一张准备出发的车票。','←','翻到车票'],
+        ['merge','','图片 16 · 这一段已经走完。向下，让两边汇合。','↓','向下汇合']
       ];
       const state = { opening:0, t:1, d:8, x:0, y:0, lastX:0, lastY:0, cool:false, travelBack:false, lockedId:null };
       const lockTo = (id) => {
@@ -357,9 +367,12 @@
         const item = travel[state.t - 1];
         state.travelBack=false;
         paint($('travelPhoto'), state.t, item[0], '这里放入照片和这一站的文字');
+        $('travelPhoto').classList.toggle('ticket-entry', state.t === 7);
         $('travelCounter').textContent = `${String(state.t).padStart(2,'0')} / 07`;
         $('travelCaption').textContent = item[1];
         setDirection($('travelHint'), item[2], state.t === 7 ? item[3] : `${item[3]} · 点按也可继续`);
+        $('stampStrip').innerHTML = Array.from({length:7}, (_,index) => `<i class="stamp ${index < state.t ? 'done' : ''}">${index + 1}</i>`).join('');
+        $('travelFlash').classList.remove('fire'); void $('travelFlash').offsetWidth; $('travelFlash').classList.add('fire');
         $('fog').classList.toggle('clear', state.t !== 1);
         $('tapMark').classList.toggle('show', state.t === 4);
         $('ticketSlip').classList.remove('show');
