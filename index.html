@@ -35,6 +35,19 @@
     .ticket input { width:100%; border:0; border-bottom:1px solid #456169; padding:12px 0 9px; outline:none; background:transparent; color:#15343b; font:20px/1.2 monospace; letter-spacing:.45em; }
     .ticket .action { margin-top:18px; width:100%; }
     .error { min-height:18px; color:#b43c2e; font-size:12px; margin:9px 0 0; }
+    .ticket-stamp { position:absolute; z-index:4; top:24px; right:21px; display:grid; place-items:center; width:78px; height:78px; border:3px double #a44237; color:#a44237; font:700 14px/1 "Songti SC",serif; letter-spacing:.08em; opacity:0; transform:rotate(-17deg) scale(1.75); pointer-events:none; }
+    .ticket.stamped .ticket-stamp { animation:ticketStamp .42s cubic-bezier(.18,.88,.2,1) both; }
+    @keyframes ticketStamp { 0% { opacity:0; transform:rotate(-17deg) scale(1.75); } 72% { opacity:1; transform:rotate(-17deg) scale(.92); } 100% { opacity:.92; transform:rotate(-17deg) scale(1); } }
+    .ticket-stub { position:absolute; z-index:5; top:0; right:-1px; bottom:0; width:38%; display:grid; align-content:center; gap:8px; padding:18px 9px; color:#183940; background:#f3ead8; clip-path:polygon(0 0,100% 0,100% 14%,93% 18%,100% 22%,100% 78%,93% 82%,100% 86%,100% 100%,0 100%); opacity:0; pointer-events:none; }
+    .ticket-stub span { font:10px/1.45 monospace; letter-spacing:.08em; }
+    .ticket-stub b { color:#a44237; font:700 18px/1 "Songti SC",serif; letter-spacing:.12em; }
+    .ticket.tearing { animation:ticketRelease .78s cubic-bezier(.6,.05,.95,.5) both; }
+    .ticket.tearing::after { animation:tearLine .6s ease-out both; }
+    .ticket.tearing .ticket-stub { animation:stubRelease .78s cubic-bezier(.2,.8,.2,1) both; }
+    .ticket-stub.visible { opacity:1; }
+    @keyframes ticketRelease { 0% { transform:rotate(-2deg); } 22% { transform:rotate(-2deg) translateX(-7px); } 100% { opacity:0; transform:rotate(-7deg) translate(-80px,60px) scale(.72); } }
+    @keyframes stubRelease { 0% { transform:translateX(0); } 34% { transform:translateX(17px) rotate(3deg); } 100% { opacity:.82; transform:translate(120px,-42px) rotate(9deg) scale(.68); } }
+    @keyframes tearLine { 25% { border-color:#a44237; box-shadow:0 0 14px #a44237; } 100% { border-color:#a44237; box-shadow:0 0 2px #a44237; } }
     #door { position:fixed; z-index:30; inset:0; pointer-events:none; display:none; transform:translateZ(0); }
     #door.visible { display:flex; }
     #door i { width:50%; background:#050b0e; border-color:#f2c56b55; transition:transform .9s cubic-bezier(.75,0,.2,1); }
@@ -45,6 +58,9 @@
 
     /* intro: two photos, one clear action */
     #opening { display:grid; place-items:center; background:linear-gradient(155deg,#101e25,#162732 55%,#0a1318); }
+    #opening .rail { opacity:0; transform:scaleY(.08); transform-origin:bottom; }
+    #opening.route-begins .rail { animation:routeBegins .85s .1s cubic-bezier(.2,.85,.2,1) both; }
+    @keyframes routeBegins { to { opacity:1; transform:scaleY(1); } }
     .opening-wrap { width:min(92vw,570px); height:100svh; display:grid; align-content:center; gap:20px; padding:26px 24px; }
     .opening-head { position:relative; z-index:3; }
     .opening-head h2 { margin:0; font-size:clamp(38px,10vw,66px); line-height:1.15; }
@@ -188,6 +204,23 @@
     .click-ripple { position:fixed; z-index:60; width:14px; height:14px; margin:-7px; pointer-events:none; border:1px solid #fff0bc; border-radius:50%; box-shadow:0 0 0 1px #f2c56b88; animation:clickRipple .62s cubic-bezier(.12,.78,.18,1) both; }
     @keyframes clickRipple { from { transform:scale(.4); opacity:.92; } to { transform:scale(7); opacity:0; } }
 
+    /* final recollection: all sixteen photos return once, then become one ticket */
+    .finale { position:fixed; z-index:40; inset:0; display:none; overflow:hidden; background:radial-gradient(circle at 50% 47%,#314b50 0%,#102025 30%,#061015 72%); }
+    .finale.show { display:block; animation:finaleIn .45s both; }
+    @keyframes finaleIn { from { opacity:0; } to { opacity:1; } }
+    .finale-route { position:absolute; left:50%; top:11svh; bottom:13svh; width:1px; background:linear-gradient(transparent,#f2c56b,transparent); box-shadow:0 0 22px #f2c56b; opacity:.72; }
+    .finale-copy { position:absolute; z-index:3; top:11svh; left:20px; right:20px; text-align:center; }
+    .finale-copy p { margin:0; color:#f5d685; font-size:12px; letter-spacing:.18em; }
+    .finale-copy h2 { margin:10px 0 0; color:var(--ink); font:600 clamp(28px,8vw,44px)/1.2 "Songti SC",serif; }
+    #memoryOrbit { position:absolute; inset:0; }
+    .reel-photo { position:absolute; z-index:2; left:calc(var(--x) * 1%); top:calc(var(--y) * 1%); width:clamp(47px,16vw,85px); aspect-ratio:.72; overflow:hidden; border:1px solid #fff7; background:var(--photo); box-shadow:0 14px 28px #0009; transform:translate(-50%,-50%) rotate(var(--r)) scale(.15); opacity:0; transition:left .9s cubic-bezier(.2,.8,.2,1),top .9s cubic-bezier(.2,.8,.2,1),transform .9s cubic-bezier(.2,.8,.2,1),opacity .7s; animation:reelAppear .55s cubic-bezier(.17,.82,.25,1) calc(var(--delay) * 1ms) both; }
+    .reel-photo::after { content:""; position:absolute; inset:5px; border:1px solid #fff5; }
+    .reel-photo span { position:absolute; z-index:2; left:6px; bottom:5px; color:#fff; font:10px monospace; text-shadow:0 1px 4px #000; }
+    @keyframes reelAppear { from { opacity:0; transform:translate(-50%,-50%) rotate(calc(var(--r) - 14deg)) scale(.1); } to { opacity:1; transform:translate(-50%,-50%) rotate(var(--r)) scale(1); } }
+    .finale.fold .reel-photo { left:50%; top:50%; opacity:.12; transform:translate(-50%,-50%) rotate(0) scale(.1); }
+    .finale.fold .finale-route { animation:routeTicket .95s ease-in both; }
+    @keyframes routeTicket { to { transform:scaleX(290); opacity:0; } }
+
     /* final */
     #ending { display:grid; place-items:center; min-height:100svh; padding:35px 20px; text-align:center; background:radial-gradient(circle at 50% 43%,#27353d,transparent 37%),#0b1115; }
     #ending[hidden] { display:none; }
@@ -196,6 +229,15 @@
     .future-ticket h2 { color:#193139; margin:3px 0 18px; font:600 clamp(37px,10vw,55px)/1.15 "Songti SC",serif; }
     .future-ticket p { margin:0; padding:12px 0; border-top:1px dashed #7d8a86; color:#31484b; font-size:13px; }
     .future-ticket b { color:#1f3435; }
+    #ending.arrival .eyebrow,#ending.arrival .future-ticket h2,#ending.arrival .future-ticket p { opacity:0; animation:ticketReveal .62s cubic-bezier(.2,.85,.2,1) both; }
+    #ending.arrival .eyebrow { animation-delay:.1s; }
+    #ending.arrival .future-ticket h2 { animation-delay:.42s; }
+    #ending.arrival .future-ticket p:nth-child(1) { animation-delay:.66s; }
+    #ending.arrival .future-ticket p:nth-child(3) { animation-delay:.88s; }
+    #ending.arrival .future-ticket p:nth-child(4) { animation-delay:1.04s; }
+    #ending.arrival .future-ticket p:nth-child(5) { animation-delay:1.2s; }
+    #ending.arrival .future-ticket p:nth-child(6) { animation-delay:1.36s; }
+    @keyframes ticketReveal { from { opacity:0; transform:translateY(13px); filter:blur(6px); } to { opacity:1; transform:none; filter:none; } }
     .restart { margin-top:22px; color:var(--muted); background:none; border:0; cursor:pointer; font-size:12px; }
     @media (max-width:520px) {
       .ticket { width:calc(100vw - 34px); padding:24px 22px 21px; }
@@ -235,6 +277,8 @@
         <input id="code" aria-label="车票密码" inputmode="numeric" maxlength="6" placeholder="489978">
         <button class="action" type="submit">验票上车</button>
         <p id="codeError" class="error"></p>
+        <i class="ticket-stamp" aria-hidden="true">已检票</i>
+        <i id="ticketStub" class="ticket-stub" aria-hidden="true"><span>MEMORY BUS<br>STUB / 489978</span><b>已检票</b></i>
       </form>
     </section>
 
@@ -298,6 +342,12 @@
       </div>
     </section>
   </main>
+
+  <div id="finale" class="finale" aria-live="polite">
+    <div class="stars"></div><div class="finale-route"></div>
+    <div class="finale-copy"><p>MEMORY REEL / 01 - 16</p><h2>所有画面，都在驶向下一站。</h2></div>
+    <div id="memoryOrbit" aria-label="十六张回望的照片"></div>
+  </div>
 
   <div id="gateOne" class="gate" role="dialog" aria-modal="true">
     <div class="gate-box">
@@ -376,7 +426,7 @@
         ['ticket','','图片 15 · 两边的画面折成同一张准备出发的车票。','←','翻到车票'],
         ['merge','','图片 16 · 这一段已经走完。向下，让两边汇合。','↓','向下汇合']
       ];
-      const state = { opening:0, t:1, d:8, x:0, y:0, lastX:0, lastY:0, cool:false, travelBack:false, lockedId:null, mergeTimer:null, puzzle:{selected:null,placed:new Set(),complete:false} };
+      const state = { opening:0, t:1, d:8, x:0, y:0, lastX:0, lastY:0, cool:false, travelBack:false, lockedId:null, mergeTimer:null, boarding:false, finaleStarted:false, puzzle:{selected:null,placed:new Set(),complete:false} };
       const lockTo = (id) => {
         state.lockedId = id;
         const section = $(id);
@@ -385,10 +435,26 @@
       const show = (id) => { $(id).hidden = false; requestAnimationFrame(() => lockTo(id)); };
       const setDirection = (target, symbol, words) => { target.innerHTML = `<b>${symbol}</b>${words}`; target.classList.add('pulse'); };
       const enter = () => {
+        if (state.boarding) return;
+        state.boarding = true;
+        const ticket = $('boarding');
+        const stub = $('ticketStub');
+        ticket.classList.add('stamped');
+        setTimeout(() => {
+          stub.classList.add('visible');
+          ticket.classList.add('tearing');
+        }, 520);
         const door = $('door');
-        door.classList.add('visible');
-        requestAnimationFrame(() => requestAnimationFrame(() => door.classList.add('open')));
-        setTimeout(() => { door.classList.remove('visible'); show('opening'); }, 900);
+        setTimeout(() => {
+          door.classList.add('visible');
+          requestAnimationFrame(() => requestAnimationFrame(() => door.classList.add('open')));
+        }, 1030);
+        setTimeout(() => {
+          door.classList.remove('visible','open');
+          $('board').hidden = true;
+          show('opening');
+          $('opening').classList.add('route-begins');
+        }, 1980);
       };
       $('boarding').addEventListener('submit', (event) => {
         event.preventDefault();
@@ -450,6 +516,40 @@
       function openPuzzle() {
         resetPuzzle();
         openGate('puzzleGate');
+      }
+      const orbitPoints = [
+        [12,82,'-13deg'],[12,71,'-10deg'],[16,60,'-7deg'],[25,51,'-4deg'],
+        [37,45,'-1deg'],[50,42,'3deg'],[64,45,'6deg'],[75,51,'9deg'],
+        [83,60,'12deg'],[84,70,'9deg'],[78,80,'6deg'],[66,85,'3deg'],
+        [53,83,'-1deg'],[42,76,'-5deg'],[39,66,'-8deg'],[50,56,'-11deg']
+      ];
+      function buildMemoryOrbit() {
+        const orbit = $('memoryOrbit');
+        orbit.innerHTML = '';
+        orbitPoints.forEach(([x,y,rotation], index) => {
+          const photo = document.createElement('i');
+          photo.className = 'reel-photo';
+          photo.style.setProperty('--x', x);
+          photo.style.setProperty('--y', y);
+          photo.style.setProperty('--r', rotation);
+          photo.style.setProperty('--delay', 110 + index * 115);
+          applyPhotoBackground(photo, index + 1);
+          photo.innerHTML = `<span>${String(index + 1).padStart(2,'0')}</span>`;
+          orbit.append(photo);
+        });
+      }
+      function startFinale() {
+        if (state.finaleStarted) return;
+        state.finaleStarted = true;
+        const finale = $('finale');
+        buildMemoryOrbit();
+        finale.classList.add('show');
+        setTimeout(() => finale.classList.add('fold'), 3220);
+        setTimeout(() => {
+          finale.classList.remove('show','fold');
+          show('ending');
+          $('ending').classList.add('arrival');
+        }, 4450);
       }
       function renderOpening() {
         const isB = state.opening === 1;
@@ -518,7 +618,7 @@
           return;
         }
         if (chapter === 'opening' && state.opening === 1 && dy < -38) openGate('gateOne');
-        if (chapter === 'distance' && state.d === 16 && dy < -38) { $('bridge').classList.add('join'); setTimeout(() => show('ending'), 850); }
+        if (chapter === 'distance' && state.d === 16 && dy < -38) { $('bridge').classList.add('join'); startFinale(); }
       }
       function bindGestures(element, chapter) {
         element.addEventListener('pointerdown', (event) => { state.x=event.clientX; state.y=event.clientY; state.lastX=event.clientX; state.lastY=event.clientY; });
@@ -629,7 +729,7 @@
       $('distanceHint').addEventListener('click', () => {
         if (state.d < 16) { state.d++; renderDistance(); return; }
         $('bridge').classList.add('join');
-        setTimeout(() => show('ending'), 850);
+        startFinale();
       });
       document.querySelectorAll('.answer').forEach((button) => button.addEventListener('click', () => {
         const right = button.dataset.answer === 'right';
