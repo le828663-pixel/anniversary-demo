@@ -302,8 +302,8 @@
   <div id="gateOne" class="gate" role="dialog" aria-modal="true">
     <div class="gate-box">
       <p class="eyebrow">FIRST CHECK</p><h2>第一站验证</h2>
-      <p class="copy">那天以后，这段旅程真正开始的原因是什么？</p>
-      <div class="answers"><button class="answer" data-gate="one" data-answer="wrong">A. 因为刚好顺路</button><button class="answer" data-gate="one" data-answer="right">B. 因为想和你一直走下去</button></div>
+      <p id="gateOneQuestion" class="copy">那天以后，这段旅程真正开始的原因是什么？</p>
+      <div class="answers"><button class="answer" data-gate="one" data-option="1">A. 因为刚好顺路</button><button class="answer" data-gate="one" data-option="2">B. 因为想和你一直走下去</button><button class="answer" data-gate="one" data-option="3">C. 因为这一晚没有别的安排</button><button class="answer" data-gate="one" data-option="4">D. 因为车刚好经过这里</button></div>
       <p id="gateOneFeedback" class="gate-feedback"></p>
     </div>
   </div>
@@ -329,7 +329,7 @@
     <div class="gate-box">
       <p class="eyebrow">SECOND CHECK</p><h2>第二站验证</h2>
       <p id="gateTwoQuestion" class="copy">拼回这段记忆以后，下一段路要怎么走？</p>
-      <div class="answers"><button class="answer" data-gate="two" data-answer="wrong">A. 到这里就够了</button><button class="answer" data-gate="two" data-answer="right">B. 下一段也要一起走</button></div>
+      <div class="answers"><button class="answer" data-gate="two" data-option="1">A. 到这里就够了</button><button class="answer" data-gate="two" data-option="2">B. 下一段也要一起走</button><button class="answer" data-gate="two" data-option="3">C. 等以后再说</button><button class="answer" data-gate="two" data-option="4">D. 各自换一条路线</button></div>
       <p id="gateTwoFeedback" class="gate-feedback"></p>
     </div>
   </div>
@@ -403,9 +403,18 @@
         $('openCopy').textContent = memoryText('openingWords', '这里可以写下第一次见面时，最想留下的一句话。');
         $('futureHeading').textContent = memoryText('endingTitle', '下一站：幸福');
         $('futureMessage').textContent = memoryText('endingWords', '[ 写给未来的一句话 ]');
-        $('gateTwoQuestion').textContent = memoryText('secondQuestion', '拼回这段记忆以后，下一段路要怎么走？');
-        document.querySelector('[data-gate="two"][data-answer="wrong"]').textContent = memoryText('secondWrong', 'A. 到这里就够了');
-        document.querySelector('[data-gate="two"][data-answer="right"]').textContent = memoryText('secondRight', 'B. 下一段也要一起走');
+        const setQuestion = (gate, questionKey, optionPrefix, correctKey, questionFallback, optionFallbacks) => {
+          $(`gate${gate}Question`).textContent = memoryText(questionKey, questionFallback);
+          const answerNumber = Number(memoryText(correctKey, '2'));
+          const correct = Number.isInteger(answerNumber) && answerNumber >= 1 && answerNumber <= 4 ? answerNumber : 2;
+          document.querySelectorAll(`[data-gate="${gate.toLowerCase().replace('one','one').replace('two','two')}"]`).forEach((button) => {
+            const option = Number(button.dataset.option);
+            button.textContent = `${'ABCD'[option - 1]}. ${memoryText(`${optionPrefix}${option}`, optionFallbacks[option - 1])}`;
+            button.dataset.answer = option === correct ? 'right' : 'wrong';
+          });
+        };
+        setQuestion('One', 'firstQuestion', 'firstOption', 'firstCorrect', '那天以后，这段旅程真正开始的原因是什么？', ['因为刚好顺路','因为想和你一直走下去','因为这一晚没有别的安排','因为车刚好经过这里']);
+        setQuestion('Two', 'secondQuestion', 'secondOption', 'secondCorrect', '拼回这段记忆以后，下一段路要怎么走？', ['到这里就够了','下一段也要一起走','等以后再说','各自换一条路线']);
       };
       function applyPhotoBackground(photo, number) {
         const image = memoryImage(number);
