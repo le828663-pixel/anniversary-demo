@@ -75,6 +75,24 @@
     .shard { display:grid; place-items:center; width:74px; height:42px; color:#15343a; background:#f3ead8; font-size:11px; animation:shard 1.8s ease-in-out infinite alternate; }
     .shard:nth-child(2){animation-delay:.25s}.shard:nth-child(3){animation-delay:.5s}
     @keyframes shard { to { transform:translateY(-5px) rotate(2deg); } }
+    .puzzle-box { max-width:460px; }
+    .puzzle-board { position:relative; display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin:18px auto 15px; width:min(82vw,340px); aspect-ratio:1.54; padding:7px; border:1px solid #527075; background:#071116; }
+    .puzzle-slot,.puzzle-piece { appearance:none; min-width:0; border:1px dashed #6b8b8c; background:#10282e; color:#f5d685; cursor:pointer; font:600 13px/1 "Songti SC",serif; transition:transform .2s, border-color .2s, box-shadow .2s, opacity .2s; }
+    .puzzle-slot { position:relative; }
+    .puzzle-slot::after { content:attr(data-slot); position:absolute; inset:0; display:grid; place-items:center; color:#7f9693; font:11px monospace; }
+    .puzzle-slot.filled { border-style:solid; border-color:var(--gold); background:var(--piece); box-shadow:inset 0 0 0 1px #fff4,0 0 18px #f2c56b44; }
+    .puzzle-slot.filled::after { content:""; }
+    .puzzle-pieces { display:flex; justify-content:center; gap:9px; margin:0 auto; width:min(82vw,340px); }
+    .puzzle-piece { width:calc((min(82vw,340px) - 18px) / 3); aspect-ratio:1.42; background:var(--piece); box-shadow:0 9px 20px #0007; }
+    .puzzle-piece:nth-child(1) { transform:rotate(-4deg); }
+    .puzzle-piece:nth-child(2) { transform:translateY(-5px); }
+    .puzzle-piece:nth-child(3) { transform:rotate(4deg); }
+    .puzzle-piece.selected { border-color:#fff5c5; box-shadow:0 0 0 2px #f2c56b66,0 9px 22px #000; }
+    .puzzle-piece.placed { opacity:.22; pointer-events:none; transform:scale(.92); }
+    .puzzle-slot.wrong { animation:wrongPiece .32s linear; border-color:#c96a5d; }
+    .puzzle-complete { max-height:0; overflow:hidden; color:#f5d685; font-size:12px; transition:max-height .35s,margin .35s; }
+    #puzzleGate.complete .puzzle-complete { max-height:28px; margin-top:12px; }
+    @keyframes wrongPiece { 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
 
     /* sticky photo chapters */
     .gallery { min-height:100svh; display:grid; place-items:center; isolation:isolate; background:radial-gradient(circle at 50% 55%,#1b3c44,transparent 42%),#081217; touch-action:pan-y; }
@@ -119,9 +137,13 @@
     .ticket-slip { position:absolute; z-index:4; right:8vw; top:20svh; display:none; width:120px; padding:11px; color:#19343a; background:#f3ead8; transform:rotate(8deg); font-size:11px; line-height:1.6; }
     .ticket-slip.show { display:block; animation:ticketFlip .5s both; }
     @keyframes ticketFlip { from { transform:rotateY(90deg) rotate(8deg); } to { transform:rotateY(0) rotate(8deg); } }
-    .arrival-lamp { position:absolute; z-index:7; top:16svh; right:10vw; display:none; width:26px; height:26px; border-radius:50%; background:#536466; cursor:pointer; }
-    .arrival-lamp.show { display:block; }
-    .arrival-lamp.lit { background:var(--gold); box-shadow:0 0 10px var(--gold),0 0 45px var(--gold); }
+    .arrival-lamp { position:absolute; z-index:8; top:18svh; right:9vw; display:none; width:62px; height:62px; border:1px solid #f7df9a; border-radius:50%; color:#172b2e; background:#536466; cursor:pointer; }
+    .arrival-lamp.show { display:grid; place-items:center; }
+    .arrival-lamp::before { content:"到站"; position:relative; z-index:2; font-size:11px; letter-spacing:.15em; }
+    .arrival-lamp.arrival-ready { color:#173238; background:var(--gold); box-shadow:0 0 0 9px #f2c56b18,0 0 0 18px #f2c56b0e,0 0 24px #f2c56b,0 0 78px #f2c56b99; animation:arrivalBeacon 1.45s ease-in-out infinite; }
+    .arrival-lamp.arrival-ready::after { content:"点亮下一站"; position:absolute; top:72px; right:-13px; width:90px; color:#f5d685; font-size:11px; letter-spacing:.08em; white-space:nowrap; text-shadow:0 2px 8px #000; }
+    .arrival-lamp.lit { background:#fff1ba; box-shadow:0 0 0 12px #f2c56b24,0 0 42px #fff1ba,0 0 96px #f2c56b; animation:none; }
+    @keyframes arrivalBeacon { 50% { transform:scale(1.12); box-shadow:0 0 0 14px #f2c56b0e,0 0 0 29px transparent,0 0 38px #f2c56b,0 0 96px #f2c56b; } }
     .stamp-strip { position:absolute; z-index:7; right:clamp(18px,7vw,80px); top:62px; display:flex; gap:5px; }
     .stamp { display:grid; place-items:center; width:19px; height:19px; border:1px solid rgba(248,241,228,.32); border-radius:50%; color:transparent; font:9px monospace; transition:background .3s, transform .3s; }
     .stamp.done { color:#173038; border-color:var(--gold); background:var(--gold); transform:rotate(-10deg); }
@@ -138,10 +160,15 @@
     .dual .photo.side { left:4vw; width:25vw; height:16svh; top:18svh; bottom:auto; opacity:.72; filter:saturate(.75); }
     .dual .photo.side .number { font-size:20px; left:10px; bottom:9px; }
     .dual .photo.side .replace { display:none; }
-    .dual.split .photo.main { width:43vw; }
-    .dual.split .photo.main.left { left:4vw; transform:none; }
-    .dual.split .photo.main.right { right:4vw; left:auto; transform:none; }
-    .dual.split .photo.main .number { font-size:clamp(36px,9vw,65px); }
+    .dual.converge #distanceMain,.dual.converge #distanceSide { inset:17svh auto 20svh; width:min(72vw,470px); height:auto; opacity:1; filter:none; }
+    .dual.converge #distanceMain { left:-65vw; transform:none; animation:convergeLeft .9s cubic-bezier(.2,.8,.2,1) both; }
+    .dual.converge #distanceSide { right:-65vw; left:auto; transform:none; animation:convergeRight .9s cubic-bezier(.2,.8,.2,1) both; }
+    .dual.converge #distanceMain .number,.dual.converge #distanceSide .number { font-size:clamp(38px,11vw,70px); }
+    .dual.converge.merged #distanceMain { left:50%; transform:translateX(-50%); animation:convergeFinal .46s cubic-bezier(.18,.88,.2,1) both; }
+    .dual.converge.merged #distanceSide { display:none; }
+    @keyframes convergeLeft { to { left:50%; transform:translateX(-60%); } }
+    @keyframes convergeRight { to { right:50%; transform:translateX(60%); } }
+    @keyframes convergeFinal { from { transform:translateX(-50%) scale(.9); filter:brightness(1.55); } to { transform:translateX(-50%) scale(1); filter:none; } }
     .dual.ticket-mode .photo.main { clip-path:polygon(0 0,100% 0,100% 15%,97% 20%,100% 25%,100% 75%,97% 80%,100% 85%,100% 100%,0 100%,0 85%,3% 80%,0 75%,0 25%,3% 20%,0 15%); }
     /* Distance photos stay centered after their entrance animation finishes. */
     .dual:not(.split) .photo.main.cover { animation:dualCover .65s cubic-bezier(.17,.76,.29,1) both; }
@@ -158,9 +185,12 @@
     @keyframes dualFade { from { transform:translateX(-50%); opacity:0; } to { transform:translateX(-50%); opacity:1; } }
     .bridge { position:absolute; z-index:5; top:50%; left:50%; width:0; height:1px; background:var(--gold); box-shadow:0 0 24px var(--gold); transition:width .9s,left .9s; }
     .bridge.join { left:0; width:100%; }
+    .click-ripple { position:fixed; z-index:60; width:14px; height:14px; margin:-7px; pointer-events:none; border:1px solid #fff0bc; border-radius:50%; box-shadow:0 0 0 1px #f2c56b88; animation:clickRipple .62s cubic-bezier(.12,.78,.18,1) both; }
+    @keyframes clickRipple { from { transform:scale(.4); opacity:.92; } to { transform:scale(7); opacity:0; } }
 
     /* final */
     #ending { display:grid; place-items:center; min-height:100svh; padding:35px 20px; text-align:center; background:radial-gradient(circle at 50% 43%,#27353d,transparent 37%),#0b1115; }
+    #ending[hidden] { display:none; }
     .future-ticket { width:min(88vw,430px); color:#183239; background:#f3ead8; padding:28px 26px; text-align:left; box-shadow:0 22px 70px #0008; animation:arrive 1s cubic-bezier(.18,.88,.2,1) both; }
     @keyframes arrive { from { transform:translateY(60px) scale(.85); opacity:0; } to { transform:none; opacity:1; } }
     .future-ticket h2 { color:#193139; margin:3px 0 18px; font:600 clamp(37px,10vw,55px)/1.15 "Songti SC",serif; }
@@ -277,11 +307,28 @@
       <p id="gateOneFeedback" class="gate-feedback"></p>
     </div>
   </div>
+  <div id="puzzleGate" class="gate" role="dialog" aria-modal="true" aria-labelledby="puzzleTitle">
+    <div class="gate-box puzzle-box">
+      <p class="eyebrow">ARRIVAL PUZZLE</p><h2 id="puzzleTitle">先把这一站拼回来</h2>
+      <p class="copy">先点一块碎片，再点它该回到的位置。</p>
+      <div class="puzzle-board" aria-label="三块记忆拼图">
+        <button class="puzzle-slot" type="button" data-slot="1" aria-label="拼图位置一"></button>
+        <button class="puzzle-slot" type="button" data-slot="2" aria-label="拼图位置二"></button>
+        <button class="puzzle-slot" type="button" data-slot="3" aria-label="拼图位置三"></button>
+      </div>
+      <div class="puzzle-pieces" aria-label="可选择的拼图碎片">
+        <button class="puzzle-piece" type="button" data-piece="1" aria-label="拼图碎片一">01</button>
+        <button class="puzzle-piece" type="button" data-piece="2" aria-label="拼图碎片二">02</button>
+        <button class="puzzle-piece" type="button" data-piece="3" aria-label="拼图碎片三">03</button>
+      </div>
+      <p id="puzzleFeedback" class="gate-feedback">完成 0 / 3</p>
+      <p class="puzzle-complete">拼好了。这段记忆已经回到原来的位置。</p>
+    </div>
+  </div>
   <div id="gateTwo" class="gate" role="dialog" aria-modal="true">
     <div class="gate-box">
       <p class="eyebrow">SECOND CHECK</p><h2>第二站验证</h2>
-      <div class="shards"><span class="shard">01</span><span class="shard">04</span><span class="shard">07</span></div>
-      <p class="copy">这些碎片拼成的，不是一张旧车票，而是继续向前的理由。</p>
+      <p id="gateTwoQuestion" class="copy">拼回这段记忆以后，下一段路要怎么走？</p>
       <div class="answers"><button class="answer" data-gate="two" data-answer="wrong">A. 到这里就够了</button><button class="answer" data-gate="two" data-answer="right">B. 下一段也要一起走</button></div>
       <p id="gateTwoFeedback" class="gate-feedback"></p>
     </div>
@@ -325,11 +372,11 @@
         ['main','10','图片 11 · 画面被切成几条，再重新拼回完整。','←','拼合画面'],
         ['main','11','图片 12 · 不必藏起过去，只要继续往前。','←','继续向前'],
         ['main','12','图片 13 · 城市从暗处一盏一盏亮起来。','←','点亮夜色'],
-        ['split','','图片 14 · 两个方向第一次同时出现，中间只留一段距离。','←','靠近一点'],
+        ['converge','','图片 14 · 同一张照片从两边靠近，最后合成一张完整画面。','←','看它汇合'],
         ['ticket','','图片 15 · 两边的画面折成同一张准备出发的车票。','←','翻到车票'],
         ['merge','','图片 16 · 这一段已经走完。向下，让两边汇合。','↓','向下汇合']
       ];
-      const state = { opening:0, t:1, d:8, x:0, y:0, lastX:0, lastY:0, cool:false, travelBack:false, lockedId:null };
+      const state = { opening:0, t:1, d:8, x:0, y:0, lastX:0, lastY:0, cool:false, travelBack:false, lockedId:null, mergeTimer:null, puzzle:{selected:null,placed:new Set(),complete:false} };
       const lockTo = (id) => {
         state.lockedId = id;
         const section = $(id);
@@ -356,6 +403,9 @@
         $('openCopy').textContent = memoryText('openingWords', '这里可以写下第一次见面时，最想留下的一句话。');
         $('futureHeading').textContent = memoryText('endingTitle', '下一站：幸福');
         $('futureMessage').textContent = memoryText('endingWords', '[ 写给未来的一句话 ]');
+        $('gateTwoQuestion').textContent = memoryText('secondQuestion', '拼回这段记忆以后，下一段路要怎么走？');
+        document.querySelector('[data-gate="two"][data-answer="wrong"]').textContent = memoryText('secondWrong', 'A. 到这里就够了');
+        document.querySelector('[data-gate="two"][data-answer="right"]').textContent = memoryText('secondRight', 'B. 下一段也要一起走');
       };
       function applyPhotoBackground(photo, number) {
         const image = memoryImage(number);
@@ -365,6 +415,32 @@
         photo.className = `photo ${side ? 'side' : 'main'} ${effect || ''}`;
         applyPhotoBackground(photo, number);
         photo.innerHTML = `<span class="number">图片 ${String(number).padStart(2,'0')}</span>${side ? '' : `<span class="replace">${memoryText(number, text)}</span>`}`;
+      }
+      function setPuzzlePieceArt(element, index) {
+        const image = memoryImage(7);
+        element.style.setProperty('--piece', image ? `url("${image}")` : palette[7]);
+        element.style.backgroundSize = '300% 100%';
+        element.style.backgroundPosition = `${(index - 1) * 50}% 50%`;
+      }
+      function resetPuzzle() {
+        state.puzzle = {selected:null, placed:new Set(), complete:false};
+        const gate = $('puzzleGate');
+        gate.classList.remove('complete');
+        document.querySelectorAll('.puzzle-piece').forEach((piece) => {
+          piece.classList.remove('selected','placed');
+          setPuzzlePieceArt(piece, Number(piece.dataset.piece));
+        });
+        document.querySelectorAll('.puzzle-slot').forEach((slot) => {
+          slot.classList.remove('filled','wrong');
+          slot.style.removeProperty('--piece');
+          slot.style.removeProperty('background-size');
+          slot.style.removeProperty('background-position');
+        });
+        $('puzzleFeedback').textContent = '完成 0 / 3';
+      }
+      function openPuzzle() {
+        resetPuzzle();
+        openGate('puzzleGate');
       }
       function renderOpening() {
         const isB = state.opening === 1;
@@ -390,17 +466,26 @@
         $('tapMark').classList.toggle('show', state.t === 4);
         $('ticketSlip').classList.remove('show');
         $('arrivalLamp').classList.toggle('show', state.t === 7);
+        $('arrivalLamp').classList.toggle('arrival-ready', state.t === 7);
+        $('arrivalLamp').classList.remove('lit');
       }
       function renderDistance() {
         const frame = distance[state.d - 8];
         const stage = $('distanceStage');
-        stage.className = `stage dual ${frame[0] === 'split' ? 'split' : ''} ${frame[0] === 'ticket' ? 'ticket-mode' : ''}`;
-        paint($('distanceMain'), state.d, ['cover','float','zoom','turn','stack','fade','cover','turn','zoom'][state.d - 8], '这里放照片和一段文字');
+        clearTimeout(state.mergeTimer);
+        stage.className = `stage dual ${frame[0] === 'converge' ? 'converge' : ''} ${frame[0] === 'ticket' ? 'ticket-mode' : ''}`;
+        const effect = frame[0] === 'converge' ? '' : ['cover','float','zoom','turn','stack','fade','cover','turn','zoom'][state.d - 8];
+        paint($('distanceMain'), state.d, effect, '这里放照片和一段文字');
         if (frame[1]) { $('distanceSide').hidden=false; paint($('distanceSide'), frame[1], '', '', true); } else { $('distanceSide').hidden=true; }
-        if (frame[0] === 'split') {
-          paint($('distanceMain'), 14, '', '左边和右边，各自有一张照片');
-          $('distanceMain').classList.add('left');
-          $('distanceSide').hidden=false; paint($('distanceSide'), 14, '', '', true); $('distanceSide').classList.remove('side'); $('distanceSide').classList.add('main','right');
+        if (frame[0] === 'converge') {
+          paint($('distanceMain'), 14, '', '同一张照片，从两边靠近。');
+          $('distanceSide').hidden=false;
+          paint($('distanceSide'), 14, '', '', true);
+          state.mergeTimer = setTimeout(() => {
+            if (state.d !== 14) return;
+            stage.classList.add('merged');
+            $('distanceSide').hidden=true;
+          }, 940);
         }
         if (frame[0] === 'merge') { $('distanceMain').style.transform='translateX(-50%) scale(.9)'; }
         else { $('distanceMain').style.transform=''; }
@@ -447,6 +532,15 @@
           moveInChapter(chapter, touch ? touch.clientX : state.lastX, touch ? touch.clientY : state.lastY);
         }, { passive:false });
       }
+      document.addEventListener('pointerdown', (event) => {
+        if (!event.target.closest('button,.gesture,.memory-card,.photo,.arrival-lamp,.tap-mark,.fog')) return;
+        const ripple = document.createElement('i');
+        ripple.className = 'click-ripple';
+        ripple.style.left = `${event.clientX}px`;
+        ripple.style.top = `${event.clientY}px`;
+        document.body.append(ripple);
+        setTimeout(() => ripple.remove(), 680);
+      }, true);
       bindGestures($('opening'), 'opening');
       bindGestures($('travelStage'), 'travel');
       bindGestures($('distanceStage'), 'distance');
@@ -479,7 +573,47 @@
           renderTravel();
         }
       });
-      $('arrivalLamp').addEventListener('click', () => { if (state.t === 7) { $('arrivalLamp').classList.add('lit'); $('travelHint').classList.remove('pulse'); setTimeout(() => openGate('gateTwo'), 560); } });
+      $('arrivalLamp').addEventListener('click', () => {
+        if (state.t !== 7) return;
+        $('arrivalLamp').classList.remove('arrival-ready');
+        $('arrivalLamp').classList.add('lit');
+        $('travelHint').classList.remove('pulse');
+        $('travelCaption').textContent='站灯已经亮起。先把这一站的画面拼回来。';
+        setTimeout(openPuzzle, 620);
+      });
+      document.querySelectorAll('.puzzle-piece').forEach((piece) => piece.addEventListener('click', () => {
+        if (piece.classList.contains('placed') || state.puzzle.complete) return;
+        document.querySelectorAll('.puzzle-piece').forEach((item) => item.classList.remove('selected'));
+        piece.classList.add('selected');
+        state.puzzle.selected = piece.dataset.piece;
+        $('puzzleFeedback').textContent = `已选中碎片 ${piece.dataset.piece}，点它该回去的位置。`;
+      }));
+      document.querySelectorAll('.puzzle-slot').forEach((slot) => slot.addEventListener('click', () => {
+        if (state.puzzle.complete) return;
+        const selected = state.puzzle.selected;
+        if (!selected) { $('puzzleFeedback').textContent = '先从下方选一块拼图。'; return; }
+        if (slot.dataset.slot !== selected) {
+          slot.classList.remove('wrong'); void slot.offsetWidth; slot.classList.add('wrong');
+          $('puzzleFeedback').textContent = '这块还没回到正确的位置，再试一次。';
+          return;
+        }
+        const piece = document.querySelector(`[data-piece="${selected}"]`);
+        slot.classList.add('filled');
+        setPuzzlePieceArt(slot, Number(selected));
+        piece.classList.remove('selected');
+        piece.classList.add('placed');
+        state.puzzle.placed.add(selected);
+        state.puzzle.selected = null;
+        const count = state.puzzle.placed.size;
+        $('puzzleFeedback').textContent = `完成 ${count} / 3`;
+        if (count !== 3) return;
+        state.puzzle.complete = true;
+        $('puzzleGate').classList.add('complete');
+        setTimeout(() => {
+          $('puzzleGate').classList.remove('open');
+          openGate('gateTwo');
+        }, 1050);
+      }));
       $('travelHint').addEventListener('click', () => {
         if (state.t < 7) { state.t++; renderTravel(); }
       });
