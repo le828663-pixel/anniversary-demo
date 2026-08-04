@@ -430,7 +430,7 @@
         ['ticket','','图片 15 · 两边的画面折成同一张准备出发的车票。','←','翻到车票'],
         ['merge','','图片 16 · 这一段已经走完。向下，让两边汇合。','↓','向下汇合']
       ];
-      const state = { opening:0, t:1, d:8, x:0, y:0, lastX:0, lastY:0, cool:false, travelBack:false, lockedId:null, mergeTimer:null, boarding:false, finaleStarted:false, puzzle:{selected:null,placed:new Set(),complete:false} };
+      const state = { opening:0, t:1, d:8, x:0, y:0, lastX:0, lastY:0, cool:false, travelBack:false, fogCleared:false, lockedId:null, mergeTimer:null, boarding:false, finaleStarted:false, puzzle:{selected:null,placed:new Set(),complete:false} };
       const lockTo = (id) => {
         state.lockedId = id;
         const section = $(id);
@@ -593,11 +593,11 @@
         const travelWriting = memory.text?.[String(state.t)]?.trim() || '';
         $('travelCaption').textContent = travelWriting;
         $('travelCaption').hidden = !travelWriting || state.t === 4;
-        const travelPrompt = state.t === 1 ? ['●','点击散去雾气'] : state.t === 4 ? ['●','点击查看背面'] : state.t === 7 ? ['●','点击点亮站灯'] : state.t === 6 ? ['←','左滑前往下一站'] : ['←','左滑继续'];
+        const travelPrompt = state.t === 1 ? (state.fogCleared ? ['←','左滑继续'] : ['●','点击散去雾气']) : state.t === 4 ? ['●','点击查看背面'] : state.t === 7 ? ['●','点击点亮站灯'] : state.t === 6 ? ['←','左滑前往下一站'] : ['←','左滑继续'];
         setDirection($('travelHint'), travelPrompt[0], travelPrompt[1]);
         $('stampStrip').innerHTML = Array.from({length:7}, (_,index) => `<i class="stamp ${index < state.t ? 'done' : ''}">${index + 1}</i>`).join('');
         $('travelFlash').classList.remove('fire'); void $('travelFlash').offsetWidth; $('travelFlash').classList.add('fire');
-        $('fog').classList.toggle('clear', state.t !== 1);
+        $('fog').classList.toggle('clear', state.t !== 1 || state.fogCleared);
         $('tapMark').classList.toggle('show', state.t === 4);
         $('ticketSlip').classList.remove('show');
         $('arrivalLamp').classList.toggle('show', state.t === 7);
@@ -693,7 +693,13 @@
       $('opening').addEventListener('wheel', (e) => { e.preventDefault(); if (state.opening === 1 && e.deltaY > 24) openGate('gateOne'); }, {passive:false});
       $('travel').addEventListener('wheel', (e) => e.preventDefault(), {passive:false});
       $('distance').addEventListener('wheel', (e) => e.preventDefault(), {passive:false});
-      $('fog').addEventListener('click', () => { $('fog').classList.add('clear'); });
+      function clearFirstFog() {
+        if (state.t !== 1 || state.fogCleared) return;
+        state.fogCleared = true;
+        $('fog').classList.add('clear');
+        setDirection($('travelHint'), '←', '左滑继续');
+      }
+      $('fog').addEventListener('click', clearFirstFog);
       $('travelPhoto').addEventListener('click', (event) => {
         if (event.target.closest('[contenteditable]') || state.t !== 4) return;
         const photo = $('travelPhoto');
@@ -750,6 +756,7 @@
         }, 1050);
       }));
       $('travelHint').addEventListener('click', () => {
+        if (state.t === 1) { clearFirstFog(); return; }
         if (state.t < 7) { state.t++; renderTravel(); }
       });
       $('distanceHint').addEventListener('click', () => {
