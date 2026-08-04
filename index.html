@@ -331,9 +331,9 @@
           <p>有效期：一直</p>
           <h2 id="futureHeading">下一站：幸福</h2>
           <p id="futureMessage">[ 写给未来的一句话 ]</p>
-          <p><b>目的地</b>　[ 想一起去的地方 ]</p>
-          <p><b>下一件事</b>　[ 一个小约定 ]</p>
-          <p><b>再次打开</b>　[ 一个值得纪念的日期 ]</p>
+          <p><b>目的地</b>　<span id="futureDestination">[ 想一起去的地方 ]</span></p>
+          <p><b>下一件事</b>　<span id="futureNext">[ 一个小约定 ]</span></p>
+          <p><b>再次打开</b>　<span id="futureReopen">[ 一个值得纪念的日期 ]</span></p>
         </div>
         <button id="restart" class="restart">回到发车前</button>
       </div>
@@ -473,6 +473,9 @@
         $('openCopy').textContent = memoryText('openingWords', '');
         $('futureHeading').textContent = memoryText('endingTitle', '下一站：幸福');
         $('futureMessage').textContent = memoryText('endingWords', '[ 写给未来的一句话 ]');
+        $('futureDestination').textContent = memoryText('destinationText', '[ 想一起去的地方 ]');
+        $('futureNext').textContent = memoryText('nextThingText', '[ 一个小约定 ]');
+        $('futureReopen').textContent = memoryText('reopenText', '[ 一个值得纪念的日期 ]');
         const setQuestion = (gate, questionKey, optionPrefix, correctKey, questionFallback, optionFallbacks) => {
           $(`gate${gate}Question`).textContent = memoryText(questionKey, questionFallback);
           const answerNumber = Number(memoryText(correctKey, '2'));
