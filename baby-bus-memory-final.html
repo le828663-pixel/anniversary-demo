@@ -580,7 +580,8 @@
         card.classList.remove('zoom-in'); void card.offsetWidth; card.classList.add('zoom-in');
         applyPhotoBackground(card, isB ? 'B' : 'A');
         card.innerHTML = '';
-        $('openCopy').textContent = memoryText('openingWords', '');
+        const openingCopy = memoryText(isB ? 'B' : 'A', memoryText('openingWords', ''));
+        $('openCopy').textContent = openingCopy;
         setDirection($('openingHint'), isB ? '↑' : '●', isB ? '上滑进入第一站' : '点击开启');
       }
       function openGate(id) { $(id).classList.add('open'); }
