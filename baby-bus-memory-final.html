@@ -507,7 +507,7 @@
         photo.innerHTML = '';
       }
       function setPuzzlePieceArt(element, index) {
-        const image = memoryImage(7);
+        const image = memoryImage('puzzle');
         element.style.setProperty('--piece', image ? `url("${image}")` : palette[7]);
         element.style.backgroundSize = '300% 100%';
         element.style.backgroundPosition = `${(index - 1) * 50}% 50%`;
