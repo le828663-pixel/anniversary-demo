@@ -130,6 +130,7 @@
     .photo.back .photo-writing { display:none; }
     .caption { position:absolute; z-index:4; left:clamp(20px,7vw,80px); right:clamp(20px,7vw,80px); bottom:8svh; display:flex; align-items:end; justify-content:space-between; gap:16px; pointer-events:none; }
     .caption p { max-width:260px; margin:0; color:#e7e3db; font-size:13px; line-height:1.75; text-shadow:0 2px 10px #000; }
+    #travelCaption,#distanceCaption { display:none; }
     .gesture { flex:0 0 auto; pointer-events:auto; cursor:pointer; }
     .gesture.hidden { opacity:0; }
     .gesture b { font-size:20px; vertical-align:-1px; margin-right:4px; }
@@ -567,7 +568,7 @@
         applyPhotoBackground(card, isB ? 'B' : 'A');
         card.innerHTML = '';
         $('openCopy').textContent = memoryText('openingWords', '');
-        setDirection($('openingHint'), isB ? '↓' : '←', isB ? '向下进入第一站验证 · 点按也可进入' : '轻划翻面 · 点按也可继续');
+        setDirection($('openingHint'), isB ? '↓' : '点', isB ? '向下进入第一站验证' : '点击继续');
       }
       function openGate(id) { $(id).classList.add('open'); }
       function renderTravel() {
@@ -577,7 +578,7 @@
         $('travelPhoto').classList.toggle('ticket-entry', state.t === 7);
         $('travelCounter').textContent = `${String(state.t).padStart(2,'0')} / 07`;
         $('travelCaption').textContent = item[1];
-        setDirection($('travelHint'), item[2], state.t === 7 ? item[3] : `${item[3]} · 点按也可继续`);
+        setDirection($('travelHint'), item[2], item[3]);
         $('stampStrip').innerHTML = Array.from({length:7}, (_,index) => `<i class="stamp ${index < state.t ? 'done' : ''}">${index + 1}</i>`).join('');
         $('travelFlash').classList.remove('fire'); void $('travelFlash').offsetWidth; $('travelFlash').classList.add('fire');
         $('fog').classList.toggle('clear', state.t !== 1);
@@ -609,7 +610,7 @@
         else { $('distanceMain').style.transform=''; }
         $('distanceCounter').textContent = `${String(state.d).padStart(2,'0')} / 16`;
         $('distanceCaption').textContent = frame[2];
-        setDirection($('distanceHint'), frame[3], state.d === 16 ? frame[4] : `${frame[4]} · 点按也可继续`);
+        setDirection($('distanceHint'), frame[3], frame[4]);
       }
       function moveInChapter(chapter, endX, endY) {
         if (state.cool) return;
