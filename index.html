@@ -65,12 +65,12 @@
     .opening-head { position:relative; z-index:3; }
     .opening-head h2 { margin:0; font-size:clamp(38px,10vw,66px); line-height:1.15; }
     .memory-card { position:relative; height:min(50svh,430px); overflow:hidden; border:1px solid var(--line); background:var(--photo); box-shadow:0 22px 70px #0008; transform-origin:center; }
-    .memory-card::before { content:""; position:absolute; inset:0; background:linear-gradient(145deg,#fff3,transparent 30%),repeating-linear-gradient(135deg,transparent 0 42px,#fff1 43px 44px); }
+    .memory-card::before { content:""; position:absolute; inset:0; opacity:0; pointer-events:none; }
     .memory-card::after { content:""; position:absolute; inset:18px; border:1px solid #fff5; }
-    .photo-label { position:absolute; z-index:2; left:20px; bottom:18px; font-size:clamp(34px,9vw,58px); letter-spacing:.12em; font-weight:700; }
-    .photo-note { position:absolute; z-index:2; right:20px; top:20px; text-align:right; font-size:12px; line-height:1.7; color:#fff; }
+    .photo-label,.photo-note { display:none; }
     .memory-card.zoom-in { animation:fromDetail .75s cubic-bezier(.2,.8,.2,1); }
-    @keyframes fromDetail { from { transform:scale(1.8); filter:blur(14px); opacity:.2; } to { transform:scale(1); filter:blur(0); opacity:1; } }
+    @keyframes fromDetail { from { transform:scale(1.08); opacity:.25; } to { transform:scale(1); opacity:1; } }
+    .opening-head .copy { font-size:clamp(16px,4vw,20px); font-weight:600; color:#f8f1e4; }
     .direction { min-height:40px; color:#f5d685; font-size:12px; letter-spacing:.13em; text-align:center; transition:opacity .25s; }
     .direction b { display:inline-grid; place-items:center; width:22px; height:22px; margin-right:8px; border:1px solid #f5d685; font-weight:400; }
     .direction.pulse { animation:hintPulse 1.35s infinite; }
@@ -118,10 +118,10 @@
     .counter { position:absolute; z-index:4; right:clamp(20px,8vw,90px); top:max(25px,env(safe-area-inset-top)); color:var(--gold); font:12px monospace; letter-spacing:.18em; }
     .stage { position:relative; width:min(100vw,720px); height:100svh; overflow:hidden; touch-action:none; }
     .photo { --photo:#3d706e; position:absolute; inset:15svh max(12px,6vw) 19svh; overflow:hidden; background:var(--photo); box-shadow:0 22px 70px #0008; transform-origin:center; }
-    .photo::before { content:""; position:absolute; inset:0; opacity:.72; background:radial-gradient(circle at 22% 20%,#fff5,transparent 18%),linear-gradient(135deg,transparent 45%,#0003),repeating-linear-gradient(122deg,transparent 0 35px,#fff1 36px 38px); }
+    .photo::before { content:""; position:absolute; inset:0; opacity:0; pointer-events:none; }
     .photo::after { content:""; position:absolute; inset:17px; border:1px solid #fff5; }
-    .photo .number { position:absolute; z-index:2; left:22px; bottom:20px; font-size:clamp(52px,16vw,106px); line-height:1; font-weight:700; letter-spacing:.05em; color:#fff; }
-    .photo .replace { position:absolute; z-index:2; right:21px; bottom:21px; max-width:160px; text-align:right; color:#fff; font-size:12px; line-height:1.8; }
+    .photo .number { display:none; }
+    .photo .replace { position:absolute; z-index:2; right:21px; bottom:21px; max-width:min(82%,320px); padding:10px 12px; text-align:right; color:#fff; background:rgba(4,12,16,.62); box-shadow:0 4px 16px #0005; font-size:clamp(16px,4vw,21px); font-weight:600; line-height:1.65; }
     .photo.back { background:#f3ead8 !important; color:#17333a; animation:ticketFlip .62s both; }
     .photo.back::before { opacity:1; background:repeating-linear-gradient(90deg,transparent 0 38px,#25495122 39px 40px),linear-gradient(#fff8,#e8d8ba); }
     .photo.back::after { border-color:#32555a88; }
@@ -249,8 +249,7 @@
       .gallery-title h2 { font-size:31px; }
       .counter { right:18px; top:26px; }
       .photo { inset:14svh 13px 20svh; }
-      .photo .number { left:17px; bottom:17px; font-size:55px; }
-      .photo .replace { right:17px; bottom:17px; max-width:126px; font-size:11px; }
+      .photo .replace { right:17px; bottom:17px; max-width:82%; font-size:16px; }
       .caption { left:18px; right:18px; bottom:4svh; align-items:end; }
       .caption p { max-width:210px; font-size:12px; }
       .direction { font-size:11px; white-space:nowrap; }
@@ -291,8 +290,6 @@
           <p class="copy" id="openCopy">这里可以写下第一次见面时，最想留下的一句话。</p>
         </div>
         <div id="openingCard" class="memory-card zoom-in" style="--photo:linear-gradient(135deg,#b25c5d,#5b2941)">
-          <span class="photo-label">开场 A</span>
-          <span class="photo-note">照片放置处<br>第一次见面的画面</span>
         </div>
         <p id="openingHint" class="direction pulse"><b>←</b>轻划，翻到故事的另一面</p>
       </div>
@@ -473,7 +470,7 @@
         $('ticketStubSerial').textContent = 'MEMORY BUS / STUB / NIGHT';
         $('code').placeholder = '输入车票密码';
         $('code').maxLength = 12;
-        $('openCopy').textContent = memoryText('openingWords', '这里可以写下第一次见面时，最想留下的一句话。');
+        $('openCopy').textContent = memoryText('openingWords', '');
         $('futureHeading').textContent = memoryText('endingTitle', '下一站：幸福');
         $('futureMessage').textContent = memoryText('endingWords', '[ 写给未来的一句话 ]');
         const setQuestion = (gate, questionKey, optionPrefix, correctKey, questionFallback, optionFallbacks) => {
@@ -491,12 +488,14 @@
       };
       function applyPhotoBackground(photo, number) {
         const image = memoryImage(number);
-        photo.style.setProperty('--photo', image ? `linear-gradient(145deg,rgba(0,0,0,.08),rgba(0,0,0,.38)),url("${image}") center/cover` : palette[number]);
+        photo.style.setProperty('--photo', image ? `url("${image}") center/cover` : palette[number]);
       }
       function paint(photo, number, effect, text, side=false) {
         photo.className = `photo ${side ? 'side' : 'main'} ${effect || ''}`;
         applyPhotoBackground(photo, number);
-        photo.innerHTML = `<span class="number">图片 ${String(number).padStart(2,'0')}</span>${side ? '' : `<span class="replace">${memoryText(number, text)}</span>`}`;
+        photo.innerHTML = '';
+        const writing = memory.text?.[String(number)]?.trim();
+        if (!side && writing) { const copy = document.createElement('span'); copy.className = 'replace'; copy.textContent = writing; photo.append(copy); }
       }
       function setPuzzlePieceArt(element, index) {
         const image = memoryImage(7);
@@ -541,7 +540,7 @@
           photo.style.setProperty('--r', rotation);
           photo.style.setProperty('--delay', 110 + index * 115);
           applyPhotoBackground(photo, index + 1);
-          photo.innerHTML = `<span>${String(index + 1).padStart(2,'0')}</span>`;
+          photo.innerHTML = '';
           orbit.append(photo);
         });
       }
@@ -563,8 +562,8 @@
         const card = $('openingCard');
         card.classList.remove('zoom-in'); void card.offsetWidth; card.classList.add('zoom-in');
         applyPhotoBackground(card, isB ? 'B' : 'A');
-        card.innerHTML = `<span class="photo-label">开场 ${isB ? 'B' : 'A'}</span><span class="photo-note">照片放置处<br>${isB ? '那天之后的另一个片段' : '第一次见面的画面'}</span>`;
-        $('openCopy').textContent = isB ? '第二张照片后，向下进入这一段记忆的第一道门。' : memoryText('openingWords', '这里可以写下第一次见面时，最想留下的一句话。');
+        card.innerHTML = '';
+        $('openCopy').textContent = memoryText('openingWords', '');
         setDirection($('openingHint'), isB ? '↓' : '←', isB ? '向下进入第一站验证 · 点按也可进入' : '轻划翻面 · 点按也可继续');
       }
       function openGate(id) { $(id).classList.add('open'); }
