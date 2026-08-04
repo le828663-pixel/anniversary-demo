@@ -27,7 +27,8 @@
     ];
     const $=id=>document.getElementById(id);const editorAccessKey='13579',editorSessionKey='baby-bus-editor-access';let data={images:{},text:{}};let active='opening';
     try{data=Object.assign(data,JSON.parse(localStorage.getItem('baby-bus-memory-data')||'{}'));data.images||={};data.text||={}}catch{}
-    const save=()=>localStorage.setItem('baby-bus-memory-data',JSON.stringify(data));
+    localStorage.removeItem('baby-bus-memory-preview');
+    const save=()=>{try{localStorage.setItem('baby-bus-memory-data',JSON.stringify(data));return true}catch{toast('照片太多或太大，已阻止这次保存。请换一张更小的照片后再试。');return false}};
     const toast=message=>{$('status').textContent=message;$('status').classList.add('show');setTimeout(()=>$('status').classList.remove('show'),1700)};
       function render(){
         $('steps').innerHTML=sections.map(s=>`<button class="step ${s.id===active?'active':''}" data-id="${s.id}">${s.name}</button>`).join('');
@@ -41,8 +42,10 @@
     $('mobileSection').addEventListener('change',e=>{active=e.target.value;render()});
     $('slotGrid').addEventListener('input',e=>{if(!e.target.matches('textarea,input[data-text]'))return;data.text[e.target.dataset.text]=e.target.value;save()});
     $('slotGrid').addEventListener('change',e=>{const input=e.target;if(input.matches('select[data-text]')){data.text[input.dataset.text]=input.value;save();return}if(!input.matches('input[type=file]')||!input.files[0])return;const reader=new FileReader;reader.onload=()=>{data.images[input.dataset.image]=reader.result;save();render();toast('照片已放入这一站')};reader.readAsDataURL(input.files[0])});
+    const compressImage=file=>new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=reject;reader.onload=()=>{const image=new Image();image.onerror=reject;image.onload=()=>{const scale=Math.min(1,1000/Math.max(image.width,image.height));const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(image.width*scale));canvas.height=Math.max(1,Math.round(image.height*scale));canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);resolve(canvas.toDataURL('image/jpeg',.72))};image.src=reader.result};reader.readAsDataURL(file)});
+    $('slotGrid').addEventListener('change',async e=>{const input=e.target;if(!input.matches('input[type=file]')||!input.files[0])return;e.stopImmediatePropagation();const key=input.dataset.image,previous=data.images[key];try{data.images[key]=await compressImage(input.files[0]);if(!save()){if(previous)data.images[key]=previous;else delete data.images[key];render();return}render();toast('照片已压缩保存，预览和导出都会使用这张图。')}catch{toast('这张照片无法读取，请换一张后再试。')}},true);
     const buildIndependentPage=()=>{save();const injection=`<script>window.MEMORY_DATA=${JSON.stringify(data).replace(/</g,'\\u003c')}</${'script'}>`;return window.__VIEW_TEMPLATE__.replace('<script>',injection+'<script>')};
-    $('preview').addEventListener('click',()=>{save();localStorage.setItem('baby-bus-memory-preview',JSON.stringify(data));if(matchMedia('(max-width:700px),(pointer:coarse)').matches){location.href='memory-preview.html';return}const preview=window.open('memory-preview.html','_blank');if(preview)preview.opener=null;else location.href='memory-preview.html'});
+    $('preview').addEventListener('click',()=>{if(!save())return;if(matchMedia('(max-width:700px),(pointer:coarse)').matches){location.href='memory-preview.html';return}const preview=window.open('memory-preview.html','_blank');if(preview)preview.opener=null;else location.href='memory-preview.html'});
     $('export').addEventListener('click',()=>{const blob=new Blob([buildIndependentPage()],{type:'text/html;charset=utf-8'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='宝宝巴士-纪念日网页.html';link.click();URL.revokeObjectURL(link.href);toast('已导出：把下载的 HTML 发给对方即可')});
     const unlockEditor=()=>{$('editorGate').hidden=true;$('editorApp').hidden=false;sessionStorage.setItem(editorSessionKey,'ok');render()};
     $('editorGate').addEventListener('submit',event=>{event.preventDefault();if($('editorAccessCode').value!==editorAccessKey){$('editorGateError').textContent='密码不对，请重新输入。';$('editorAccessCode').select();return}$('editorGateError').textContent='';unlockEditor()});

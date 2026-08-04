@@ -14,7 +14,7 @@
     (() => {
       const fail = () => { document.body.innerHTML = '<main class="loading"><div><strong>预览没有打开</strong><p>请返回编辑台后再试一次。</p></div></main>'; };
       let data = {};
-      try { data = JSON.parse(localStorage.getItem('baby-bus-memory-preview') || '{}'); } catch {}
+      try { data = JSON.parse(localStorage.getItem('baby-bus-memory-data') || '{}'); } catch {}
       fetch('baby-bus-memory-final.html', { cache: 'no-store' })
         .then((response) => response.ok ? response.text() : Promise.reject())
         .then((html) => {
