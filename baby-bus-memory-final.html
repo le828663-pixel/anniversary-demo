@@ -271,14 +271,14 @@
     <section id="board" class="chapter">
       <div class="stars"></div><div class="bus-lights"></div>
       <form id="boarding" class="ticket">
-        <p>MEMORY BUS / 489978</p>
+        <p id="boardingSerial">MEMORY BUS / NIGHT 07</p>
         <h1 class="display">宝宝巴士</h1>
         <p>请输入车票密码，今晚的车门只为这一段记忆打开。</p>
-        <input id="code" aria-label="车票密码" inputmode="numeric" maxlength="6" placeholder="489978">
+        <input id="code" type="password" aria-label="车票密码" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="输入车票密码">
         <button class="action" type="submit">验票上车</button>
         <p id="codeError" class="error"></p>
         <i class="ticket-stamp" aria-hidden="true">已检票</i>
-        <i id="ticketStub" class="ticket-stub" aria-hidden="true"><span>MEMORY BUS<br>STUB / 489978</span><b>已检票</b></i>
+        <i id="ticketStub" class="ticket-stub" aria-hidden="true"><span id="ticketStubSerial">MEMORY BUS / STUB / NIGHT</span><b>已检票</b></i>
       </form>
     </section>
 
@@ -390,7 +390,6 @@
       const memory = (() => {
         try {
           if (window.MEMORY_DATA) return window.MEMORY_DATA;
-          if (new URLSearchParams(location.search).has('preview')) return JSON.parse(localStorage.getItem('baby-bus-memory-data') || '{}');
           return {};
         }
         catch { return {}; }
@@ -458,14 +457,22 @@
       };
       $('boarding').addEventListener('submit', (event) => {
         event.preventDefault();
-        if ($('code').value.trim() !== '489978') { $('codeError').textContent = '车票密码不对，再想一想。'; return; }
+        if ($('code').value.trim() !== getBoardingCode()) { $('codeError').textContent = '车票密码不对，再想一想。'; return; }
         $('codeError').textContent = '';
         enter();
       });
 
       const memoryText = (number, fallback) => memory.text?.[String(number)]?.trim() || fallback;
       const memoryImage = (number) => memory.images?.[String(number)] || '';
+      function getBoardingCode() {
+        const candidate = memoryText('boardingCode', '489978');
+        return /^[0-9]{4,12}$/.test(candidate) ? candidate : '489978';
+      }
       const personalizeStaticCopy = () => {
+        $('boardingSerial').textContent = 'MEMORY BUS / NIGHT 07';
+        $('ticketStubSerial').textContent = 'MEMORY BUS / STUB / NIGHT';
+        $('code').placeholder = '输入车票密码';
+        $('code').maxLength = 12;
         $('openCopy').textContent = memoryText('openingWords', '这里可以写下第一次见面时，最想留下的一句话。');
         $('futureHeading').textContent = memoryText('endingTitle', '下一站：幸福');
         $('futureMessage').textContent = memoryText('endingWords', '[ 写给未来的一句话 ]');
