@@ -72,7 +72,7 @@
     @keyframes fromDetail { from { transform:scale(1.08); opacity:.25; } to { transform:scale(1); opacity:1; } }
     .opening-head .copy { font-size:clamp(16px,4vw,20px); font-weight:600; color:#f8f1e4; }
     .direction { min-height:40px; color:#f5d685; font-size:12px; letter-spacing:.13em; text-align:center; transition:opacity .25s; }
-    .direction b { display:inline-grid; place-items:center; width:22px; height:22px; margin-right:8px; border:1px solid #f5d685; font-weight:400; }
+    .direction b { display:inline; margin-right:7px; border:0; font-size:18px; font-weight:400; }
     .direction.pulse { animation:hintPulse 1.35s infinite; }
     @keyframes hintPulse { 50% { transform:translateY(5px); opacity:.58; } }
     .gate-trigger { display:none; }
@@ -135,8 +135,8 @@
     .photo.back .replace { left:21px; right:21px; bottom:30px; max-width:none; color:#29464b; text-align:left; font:600 clamp(30px,8vw,52px)/1.25 "Songti SC",serif; }
     .photo.back .photo-writing { display:none; }
     .caption { position:absolute; z-index:4; left:clamp(20px,7vw,80px); right:clamp(20px,7vw,80px); bottom:8svh; display:flex; align-items:end; justify-content:space-between; gap:16px; pointer-events:none; }
-    .caption p { max-width:260px; margin:0; color:#e7e3db; font-size:13px; line-height:1.75; text-shadow:0 2px 10px #000; }
-    #travelCaption,#distanceCaption { display:none; }
+    .caption p { max-width:min(66%,380px); margin:0; color:#f8f1e4; font-size:clamp(15px,4vw,19px); font-weight:600; line-height:1.65; text-shadow:0 2px 10px #000; }
+    #travelCaption[hidden],#distanceCaption[hidden] { display:none; }
     .gesture { flex:0 0 auto; pointer-events:auto; cursor:pointer; }
     .gesture.hidden { opacity:0; }
     .gesture b { font-size:20px; vertical-align:-1px; margin-right:4px; }
@@ -437,7 +437,7 @@
         window.scrollTo(0, section.offsetTop);
       };
       const show = (id) => { $(id).hidden = false; requestAnimationFrame(() => lockTo(id)); };
-      const setDirection = (target, words) => { target.textContent = words; target.classList.add('pulse'); };
+      const setDirection = (target, symbol, words) => { target.innerHTML = `<b>${symbol}</b>${words}`; target.classList.add('pulse'); };
       const enter = () => {
         if (state.boarding) return;
         state.boarding = true;
@@ -505,8 +505,6 @@
         photo.className = `photo ${side ? 'side' : 'main'} ${effect || ''}`;
         applyPhotoBackground(photo, number);
         photo.innerHTML = '';
-        const writing = memory.text?.[String(number)]?.trim();
-        if (!side && writing) { const copy = document.createElement('span'); copy.className = 'replace'; copy.textContent = writing; photo.append(copy); }
       }
       function setPuzzlePieceArt(element, index) {
         const image = memoryImage(7);
@@ -583,7 +581,7 @@
         applyPhotoBackground(card, isB ? 'B' : 'A');
         card.innerHTML = '';
         $('openCopy').textContent = memoryText('openingWords', '');
-        setDirection($('openingHint'), '点击');
+        setDirection($('openingHint'), isB ? '↑' : '●', isB ? '上滑进入第一站' : '点击开启');
       }
       function openGate(id) { $(id).classList.add('open'); }
       function renderTravel() {
@@ -592,8 +590,11 @@
         paint($('travelPhoto'), state.t, item[0], '这里放入照片和这一站的文字');
         $('travelPhoto').classList.toggle('ticket-entry', state.t === 7);
         $('travelCounter').textContent = `${String(state.t).padStart(2,'0')} / 07`;
-        $('travelCaption').textContent = item[1];
-        setDirection($('travelHint'), state.t === 1 || state.t === 7 ? '点击' : '左滑');
+        const travelWriting = memory.text?.[String(state.t)]?.trim() || '';
+        $('travelCaption').textContent = travelWriting;
+        $('travelCaption').hidden = !travelWriting || state.t === 4;
+        const travelPrompt = state.t === 1 ? ['●','点击散去雾气'] : state.t === 4 ? ['●','点击查看背面'] : state.t === 7 ? ['●','点击点亮站灯'] : state.t === 6 ? ['←','左滑前往下一站'] : ['←','左滑继续'];
+        setDirection($('travelHint'), travelPrompt[0], travelPrompt[1]);
         $('stampStrip').innerHTML = Array.from({length:7}, (_,index) => `<i class="stamp ${index < state.t ? 'done' : ''}">${index + 1}</i>`).join('');
         $('travelFlash').classList.remove('fire'); void $('travelFlash').offsetWidth; $('travelFlash').classList.add('fire');
         $('fog').classList.toggle('clear', state.t !== 1);
@@ -624,8 +625,11 @@
         if (frame[0] === 'merge') { $('distanceMain').style.transform='translateX(-50%) scale(.9)'; }
         else { $('distanceMain').style.transform=''; }
         $('distanceCounter').textContent = `${String(state.d).padStart(2,'0')} / 16`;
-        $('distanceCaption').textContent = frame[2];
-        setDirection($('distanceHint'), state.d === 16 ? '上滑' : '左滑');
+        const distanceWriting = memory.text?.[String(state.d)]?.trim() || '';
+        $('distanceCaption').textContent = distanceWriting;
+        $('distanceCaption').hidden = !distanceWriting;
+        const distancePrompt = state.d === 8 ? ['←','左滑进入天各一方'] : state.d === 14 ? ['←','左滑让画面汇合'] : state.d === 15 ? ['←','左滑翻成车票'] : state.d === 16 ? ['↑','上滑前往终点'] : ['←','左滑继续'];
+        setDirection($('distanceHint'), distancePrompt[0], distancePrompt[1]);
       }
       function moveInChapter(chapter, endX, endY) {
         if (state.cool) return;
@@ -685,14 +689,11 @@
         if (Math.abs(window.scrollY - locked.offsetTop) > 2) window.scrollTo(0, locked.offsetTop);
       }, { passive:true });
       $('openingCard').addEventListener('click', () => { if (state.opening === 0) { state.opening=1; renderOpening(); } });
-      $('openingHint').addEventListener('click', () => {
-        if (state.opening === 0) { state.opening=1; renderOpening(); }
-        else openGate('gateOne');
-      });
+      $('openingHint').addEventListener('click', () => { if (state.opening === 0) { state.opening=1; renderOpening(); } });
       $('opening').addEventListener('wheel', (e) => { e.preventDefault(); if (state.opening === 1 && e.deltaY > 24) openGate('gateOne'); }, {passive:false});
       $('travel').addEventListener('wheel', (e) => e.preventDefault(), {passive:false});
       $('distance').addEventListener('wheel', (e) => e.preventDefault(), {passive:false});
-      $('fog').addEventListener('click', () => { $('fog').classList.add('clear'); $('travelCaption').textContent='雾散开了。现在可以向左翻到下一张。'; });
+      $('fog').addEventListener('click', () => { $('fog').classList.add('clear'); });
       $('travelPhoto').addEventListener('click', (event) => {
         if (event.target.closest('[contenteditable]') || state.t !== 4) return;
         const photo = $('travelPhoto');
@@ -701,8 +702,8 @@
         $('tapMark').classList.toggle('show', !state.travelBack);
         if (state.travelBack) {
           photo.innerHTML = `<span class="number">票根背面 / 图片 04</span><span class="replace">${memoryText(4, '这里写下那天最想留下的一句话')}</span>`;
-          $('travelCaption').textContent='照片翻到背面了。这里就是可以填写文字的位置，再点一次翻回照片。';
-          setDirection($('travelHint'), '点击');
+          $('travelCaption').hidden = true;
+          setDirection($('travelHint'), '●', '点击翻回照片');
         } else {
           renderTravel();
         }
@@ -712,7 +713,6 @@
         $('arrivalLamp').classList.remove('arrival-ready');
         $('arrivalLamp').classList.add('lit');
         $('travelHint').classList.remove('pulse');
-        $('travelCaption').textContent='站灯已经亮起。先把这一站的画面拼回来。';
         startPuzzleBridge();
         setTimeout(openPuzzle, 1120);
       });
