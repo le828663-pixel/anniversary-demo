@@ -109,6 +109,12 @@
     .puzzle-complete { max-height:0; overflow:hidden; color:#f5d685; font-size:12px; transition:max-height .35s,margin .35s; }
     #puzzleGate.complete .puzzle-complete { max-height:28px; margin-top:12px; }
     @keyframes wrongPiece { 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+    .puzzle-bridge { position:fixed; z-index:24; inset:0; display:grid; place-items:center; padding:24px; pointer-events:none; opacity:0; visibility:hidden; background:rgba(3,10,13,.84); transition:opacity .28s,visibility .28s; }
+    .puzzle-bridge.show { opacity:1; visibility:visible; }
+    .puzzle-bridge-photo { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; width:min(84vw,420px); aspect-ratio:1.54; padding:6px; border:1px solid #f2c56b99; background:#071116; box-shadow:0 20px 70px #000a; }
+    .puzzle-bridge-piece { background:var(--piece); background-size:300% 100%; animation:bridgePiece .75s cubic-bezier(.18,.88,.2,1) both; }
+    .puzzle-bridge-piece:nth-child(1){animation-delay:.04s}.puzzle-bridge-piece:nth-child(2){animation-delay:.13s}.puzzle-bridge-piece:nth-child(3){animation-delay:.22s}
+    @keyframes bridgePiece { from { opacity:0; transform:translateY(100px) rotate(10deg) scale(.7); } to { opacity:1; transform:none; } }
 
     /* sticky photo chapters */
     .gallery { min-height:100svh; display:grid; place-items:center; isolation:isolate; background:radial-gradient(circle at 50% 55%,#1b3c44,transparent 42%),#081217; touch-action:pan-y; }
@@ -309,7 +315,7 @@
         <div id="ticketSlip" class="ticket-slip">票根背面<br>[ 写下当时的一句话 ]</div>
         <div id="arrivalLamp" class="arrival-lamp" aria-label="点亮到站灯"></div>
       </div>
-      <div class="caption"><p id="travelCaption">雾还没有散开。先轻划，把这一站的画面从雾里带出来。</p><div id="travelHint" class="direction gesture"><b>←</b>轻划翻开</div></div>
+      <div class="caption"><p id="travelCaption">雾还没有散开。先轻划，把这一站的画面从雾里带出来。</p><div id="travelHint" class="direction gesture">点击</div></div>
     </section>
 
     <section id="distance" class="chapter gallery" hidden>
@@ -321,7 +327,7 @@
         <div id="distanceSide" class="photo side" hidden><span class="number">图片 08</span></div>
         <div id="bridge" class="bridge"></div>
       </div>
-      <div class="caption"><p id="distanceCaption">下一段故事，在另一座城市慢慢展开。</p><div id="distanceHint" class="direction gesture"><b>←</b>轻划进入下一段</div></div>
+      <div class="caption"><p id="distanceCaption">下一段故事，在另一座城市慢慢展开。</p><div id="distanceHint" class="direction gesture">左滑</div></div>
     </section>
 
     <section id="ending" class="chapter" hidden>
@@ -355,6 +361,7 @@
       <p id="gateOneFeedback" class="gate-feedback"></p>
     </div>
   </div>
+  <div id="puzzleBridge" class="puzzle-bridge" aria-hidden="true"><div class="puzzle-bridge-photo"><i class="puzzle-bridge-piece"></i><i class="puzzle-bridge-piece"></i><i class="puzzle-bridge-piece"></i></div></div>
   <div id="puzzleGate" class="gate" role="dialog" aria-modal="true" aria-labelledby="puzzleTitle">
     <div class="gate-box puzzle-box">
       <p class="eyebrow">ARRIVAL PUZZLE</p><h2 id="puzzleTitle">先把这一站拼回来</h2>
@@ -430,7 +437,7 @@
         window.scrollTo(0, section.offsetTop);
       };
       const show = (id) => { $(id).hidden = false; requestAnimationFrame(() => lockTo(id)); };
-      const setDirection = (target, symbol, words) => { target.innerHTML = `<b>${symbol}</b>${words}`; target.classList.add('pulse'); };
+      const setDirection = (target, words) => { target.textContent = words; target.classList.add('pulse'); };
       const enter = () => {
         if (state.boarding) return;
         state.boarding = true;
@@ -525,7 +532,15 @@
       }
       function openPuzzle() {
         resetPuzzle();
+        $('puzzleBridge').classList.remove('show');
         openGate('puzzleGate');
+      }
+      function startPuzzleBridge() {
+        document.querySelectorAll('.puzzle-bridge-piece').forEach((piece, index) => setPuzzlePieceArt(piece, index + 1));
+        const bridge = $('puzzleBridge');
+        bridge.classList.remove('show');
+        void bridge.offsetWidth;
+        bridge.classList.add('show');
       }
       const orbitPoints = [
         [12,82,'-13deg'],[12,71,'-10deg'],[16,60,'-7deg'],[25,51,'-4deg'],
@@ -568,7 +583,7 @@
         applyPhotoBackground(card, isB ? 'B' : 'A');
         card.innerHTML = '';
         $('openCopy').textContent = memoryText('openingWords', '');
-        setDirection($('openingHint'), isB ? '↓' : '点', isB ? '向下进入第一站验证' : '点击继续');
+        setDirection($('openingHint'), '点击');
       }
       function openGate(id) { $(id).classList.add('open'); }
       function renderTravel() {
@@ -578,7 +593,7 @@
         $('travelPhoto').classList.toggle('ticket-entry', state.t === 7);
         $('travelCounter').textContent = `${String(state.t).padStart(2,'0')} / 07`;
         $('travelCaption').textContent = item[1];
-        setDirection($('travelHint'), item[2], item[3]);
+        setDirection($('travelHint'), state.t === 1 || state.t === 7 ? '点击' : '左滑');
         $('stampStrip').innerHTML = Array.from({length:7}, (_,index) => `<i class="stamp ${index < state.t ? 'done' : ''}">${index + 1}</i>`).join('');
         $('travelFlash').classList.remove('fire'); void $('travelFlash').offsetWidth; $('travelFlash').classList.add('fire');
         $('fog').classList.toggle('clear', state.t !== 1);
@@ -610,7 +625,7 @@
         else { $('distanceMain').style.transform=''; }
         $('distanceCounter').textContent = `${String(state.d).padStart(2,'0')} / 16`;
         $('distanceCaption').textContent = frame[2];
-        setDirection($('distanceHint'), frame[3], frame[4]);
+        setDirection($('distanceHint'), state.d === 16 ? '上滑' : '左滑');
       }
       function moveInChapter(chapter, endX, endY) {
         if (state.cool) return;
@@ -687,7 +702,7 @@
         if (state.travelBack) {
           photo.innerHTML = `<span class="number">票根背面 / 图片 04</span><span class="replace">${memoryText(4, '这里写下那天最想留下的一句话')}</span>`;
           $('travelCaption').textContent='照片翻到背面了。这里就是可以填写文字的位置，再点一次翻回照片。';
-          setDirection($('travelHint'), '点', '点按翻回照片');
+          setDirection($('travelHint'), '点击');
         } else {
           renderTravel();
         }
@@ -698,7 +713,8 @@
         $('arrivalLamp').classList.add('lit');
         $('travelHint').classList.remove('pulse');
         $('travelCaption').textContent='站灯已经亮起。先把这一站的画面拼回来。';
-        setTimeout(openPuzzle, 620);
+        startPuzzleBridge();
+        setTimeout(openPuzzle, 1120);
       });
       document.querySelectorAll('.puzzle-piece').forEach((piece) => piece.addEventListener('click', () => {
         if (piece.classList.contains('placed') || state.puzzle.complete) return;
