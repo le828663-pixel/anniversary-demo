@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>正在打开预览</title>
+  <style>
+    html,body{height:100%;margin:0;background:#071015;color:#f8f1e4;font-family:"Microsoft YaHei","PingFang SC",sans-serif}.loading{min-height:100%;display:grid;place-items:center;padding:24px;text-align:center}.loading i{display:block;width:42px;height:42px;margin:0 auto 18px;border:1px solid #f2c56b;border-left-color:transparent;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.loading p{margin:0;color:#b7b9b5;font-size:13px;letter-spacing:.1em}.loading strong{display:block;margin-bottom:8px;color:#f2c56b;font:600 29px "Songti SC",serif}
+  </style>
+</head>
+<body>
+  <main class="loading"><div><i></i><strong>正在打开预览</strong><p>把刚刚编辑的内容放回这一段旅程。</p></div></main>
+  <script>
+    (() => {
+      const fail = () => { document.body.innerHTML = '<main class="loading"><div><strong>预览没有打开</strong><p>请返回编辑台后再试一次。</p></div></main>'; };
+      let data = {};
+      try { data = JSON.parse(localStorage.getItem('baby-bus-memory-preview') || '{}'); } catch {}
+      fetch('baby-bus-memory-final.html', { cache: 'no-store' })
+        .then((response) => response.ok ? response.text() : Promise.reject())
+        .then((html) => {
+          const injection = `<script>window.MEMORY_DATA=${JSON.stringify(data).replace(/</g, '\\u003c')}</${'script'}>`;
+          document.open();
+          document.write(html.replace('<script>', injection + '<script>'));
+          document.close();
+        })
+        .catch(fail);
+    })();
+  </script>
+</body>
+</html>
