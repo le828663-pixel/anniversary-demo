@@ -13,16 +13,29 @@
   <script>
     (() => {
       const fail = () => { document.body.innerHTML = '<main class="loading"><div><strong>预览没有打开</strong><p>请返回编辑台后再试一次。</p></div></main>'; };
-      let data = {};
-      try { data = JSON.parse(localStorage.getItem('baby-bus-memory-data') || '{}'); } catch {}
-      fetch('baby-bus-memory-final.html', { cache: 'no-store' })
-        .then((response) => response.ok ? response.text() : Promise.reject())
-        .then((html) => {
-          const injection = `<script>window.MEMORY_DATA=${JSON.stringify(data).replace(/</g, '\\u003c')}</${'script'}>`;
-          document.open();
-          document.write(html.replace('<script>', injection + '<script>'));
-          document.close();
-        })
+      const legacy = () => { try { return { text: JSON.parse(localStorage.getItem('baby-bus-memory-text') || '{}'), images: {} }; } catch { return { images: {}, text: {} }; } };
+      const readDraft = () => new Promise((resolve) => {
+        if (!('indexedDB' in window)) { resolve(legacy()); return; }
+        const request = indexedDB.open('baby-bus-memory-editor', 2);
+        request.onupgradeneeded = () => { const db = request.result; if (!db.objectStoreNames.contains('drafts')) db.createObjectStore('drafts'); };
+        request.onerror = () => resolve(legacy());
+        request.onsuccess = () => {
+          try {
+            const read = request.result.transaction('drafts').objectStore('drafts').get('current');
+            read.onerror = () => resolve(legacy());
+            read.onsuccess = () => resolve(read.result || legacy());
+          } catch { resolve(legacy()); }
+        };
+      });
+      readDraft()
+        .then((data) => fetch('baby-bus-memory-final.html', { cache: 'no-store' })
+          .then((response) => response.ok ? response.text() : Promise.reject())
+          .then((html) => {
+            const injection = `<script>window.MEMORY_DATA=${JSON.stringify(data).replace(/</g, '\\u003c')}</${'script'}>`;
+            document.open();
+            document.write(html.replace('<script>', injection + '<script>'));
+            document.close();
+          }))
         .catch(fail);
     })();
   </script>
